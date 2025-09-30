@@ -8,3 +8,5 @@
 - [`runtime.md`](runtime.md) – How generated actions execute and integrate at runtime.
 - [`deployment.md`](deployment.md) – Options for persisting and deploying generated artifacts.
 - [`roadmap.md`](roadmap.md) – Planned enhancements and contribution opportunities.
+
+- [`../LICENSE`](../LICENSE) – Project license (MIT).

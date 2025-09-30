@@ -106,4 +106,4 @@ Issues and feature ideas are tracked in `docs/roadmap.md`. Feel free to suggest 
 
 ## License
 
-Add your organization’s license information here if required.
+Released under the [MIT License](LICENSE).
