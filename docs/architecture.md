@@ -7,12 +7,15 @@ Agentforce Dynamic Action turns org metadata plus a natural language business go
 
 | Layer | Apex Components | Responsibility |
 |-------|-----------------|----------------|
+| **Schema Snapshot** | `SchemaSnapshotService` | Produce a trimmed org metadata slice for the blueprinting prompt. |
 | **Intent & Prompting** | `BlueprintSynthesisService`, `PromptLibrary`, `LLMClientGateway` | Build prompts, call (or stub) an LLM, parse JSON into `ActionBlueprint` objects. |
 | **Blueprint Heuristics** | `HeuristicBlueprintFactory` | Provide offline/default blueprints when no LLM is available. |
+| **Blueprint Ranking** | `BlueprintRecommendationService` | Score and rank recommended actions for the current goal. |
 | **Synthesis** | `CodeTemplateEngine`, `RuntimeTypeAdapters`, `GuardrailEvaluator`, `CodeGenService` | Render Apex/test source code from blueprints, enforce guardrails, and normalize input types. |
 | **Planning** | `DynamicActionPlanner`, `PlanModels` | Assemble a runtime plan (actions, dependencies, checkpoint messaging). |
 | **Runtime** | `DynamicActionPipeline`, `DynamicActionOrchestrator`, `InvocableActionFactory` | Drive the full pipeline, deploy artifacts, and execute generated actions. |
-| **Tests** | `CodeTemplateEngine_Test`, `DynamicActionPipeline_Test` | Validate template output and pipeline wiring. |
+| **Turnkey Pipeline** | `SchemaIntentPipeline` | Orchestrate schema snapshot → recommendations → plan + artifacts. |
+| **Tests** | `CodeTemplateEngine_Test`, `DynamicActionPipeline_Test`, `SchemaIntentPipeline_Test`, `GenerationBenchmark_Test` | Validate template output, turnkey pipeline, and benchmark harness. |
 
 ## End-to-End Flow
 
@@ -47,3 +50,7 @@ See `docs/blueprint-contract.md` for the JSON structure consumed and produced by
 3. Expand the template library to support Flow, invocable actions, and Lightning web components.
 4. Wire telemetry capture and tuning feedback loops (prompt revision, outcome scoring).
 5. Harden testing with end-to-end orchestrator scenarios and mocked LLM responses.
+
+## Turnkey Pipeline
+
+Call `SchemaIntentPipeline.run(goal, options)` to execute the complete flow in one method. The result bundles the schema snapshot, ranked recommendations, plan, and generated code artifacts so UI or automation layers can drive confirmation and execution.

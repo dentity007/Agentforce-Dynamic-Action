@@ -1,12 +1,20 @@
 public with sharing class DynamicActionPlanner {
     public static PlanModels.Plan buildPlan(String goal, Map<String, Object> schemaSlice, Map<String, Object> constraints) {
+        List<PlanModels.ActionBlueprint> blueprints = BlueprintSynthesisService.buildBlueprints(goal, schemaSlice, constraints);
+        return buildPlan(goal, schemaSlice, constraints, blueprints);
+    }
+
+    public static PlanModels.Plan buildPlan(String goal, Map<String, Object> schemaSlice, Map<String, Object> constraints, List<PlanModels.ActionBlueprint> blueprints) {
         PlanModels.Plan plan = new PlanModels.Plan();
         plan.goal = goal;
-        plan.actions = BlueprintSynthesisService.buildBlueprints(goal, schemaSlice, constraints);
+        List<PlanModels.ActionBlueprint> resolvedBlueprints = (blueprints == null)
+            ? BlueprintSynthesisService.buildBlueprints(goal, schemaSlice, constraints)
+            : blueprints;
+        plan.actions = resolvedBlueprints;
         plan.dependencies.add('FLS');
         plan.dependencies.add('Sharing');
         plan.guardrails.add('LLM generated blueprint validated via runtime guardrails');
-        plan.checkpoint = deriveCheckpoint(plan.actions);
+        plan.checkpoint = deriveCheckpoint(resolvedBlueprints);
         return plan;
     }
 

@@ -61,6 +61,31 @@ Key Apex entry points:
 
 ---
 
+## End-to-End Pipeline
+
+Use `SchemaIntentPipeline` to execute the full schema → recommendation → implementation flow in one call.
+
+```apex
+SchemaIntentPipeline.Options options = new SchemaIntentPipeline.Options();
+options.schemaOptions.maxObjects = 5;
+options.schemaOptions.maxFieldsPerObject = 10;
+
+PlanModels.PipelineResult pipeline = SchemaIntentPipeline.run(
+    'Recommend follow-up actions for high value opportunities',
+    options
+);
+System.debug(pipeline.schema);
+System.debug(pipeline.recommendations);
+System.debug(pipeline.artifacts);
+```
+
+- `pipeline.schema` contains a trimmed org snapshot (objects, fields, relationships).
+- `pipeline.recommendations` lists ranked action blueprints with rationale and scores.
+- `pipeline.plan` mirrors the orchestrator plan used for execution.
+- `pipeline.artifacts` delivers generated Apex classes, tests, and metadata.
+
+Tie the result into `DynamicActionOrchestrator.run` once users confirm the checkpoint displayed in the plan.
+
 ## Blueprint Contract
 
 Generated actions follow the `PlanModels.ActionBlueprint` schema defined in `docs/blueprint-contract.md`. Each blueprint lists:
@@ -92,6 +117,12 @@ Blueprints may come from:
 See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` for hands-on guides.
 
 ---
+
+## Evaluation & Regression Tracking
+
+- Run `GenerationBenchmark.summarize()` to compare current generation output with golden blueprints.
+- Review `docs/evaluation.md` and `evaluations/README.md` for adding scenarios and wiring the benchmark into CI.
+- Golden reference assets live under `evaluations/golden/` so the expected behavior stays visible in code review.
 
 ## Contributing
 

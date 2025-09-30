@@ -52,6 +52,25 @@ public with sharing class PlanModels {
         }
     }
 
+    public class Recommendation {
+        @AuraEnabled public String name;
+        @AuraEnabled public Decimal score;
+        @AuraEnabled public String rationale;
+        @AuraEnabled public ActionBlueprint blueprint;
+    }
+
+    public class PipelineResult {
+        @AuraEnabled public Map<String, Object> schema;
+        @AuraEnabled public List<Recommendation> recommendations;
+        @AuraEnabled public Plan plan;
+        @AuraEnabled public CodeArtifacts artifacts;
+
+        public PipelineResult() {
+            schema = new Map<String, Object>();
+            recommendations = new List<Recommendation>();
+        }
+    }
+
     public class CodeArtifacts {
         @AuraEnabled public List<Map<String, String>> apex;
         @AuraEnabled public List<String> soql;
