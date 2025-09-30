@@ -3,7 +3,7 @@
 `SchemaIntentPipeline` exposes a turnkey entry point that bundles the three core steps:
 
 1. **Schema Snapshot** – Uses `SchemaSnapshotService` to gather object/field metadata (limited by options).
-2. **Recommendation Ranking** – Calls `BlueprintRecommendationService` to score blueprints returned by the LLM/heuristic layer.
+2. **Recommendation Ranking** – Calls `BlueprintRecommendationService` to blend curated entries (`BlueprintLibraryService`) with LLM/heuristic output and score the combined list.
 3. **Implementation Generation** – Reuses `DynamicActionPlanner` and `CodeGenService` to produce a runnable plan and code artifacts.
 
 ## Usage

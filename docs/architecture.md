@@ -10,7 +10,7 @@ Agentforce Dynamic Action turns org metadata plus a natural language business go
 | **Schema Snapshot** | `SchemaSnapshotService` | Produce a trimmed org metadata slice for the blueprinting prompt. |
 | **Intent & Prompting** | `BlueprintSynthesisService`, `PromptLibrary`, `LLMClientGateway` | Build prompts, call (or stub) an LLM, parse JSON into `ActionBlueprint` objects. |
 | **Blueprint Heuristics** | `HeuristicBlueprintFactory` | Provide offline/default blueprints when no LLM is available. |
-| **Blueprint Ranking** | `BlueprintRecommendationService` | Score and rank recommended actions for the current goal. |
+| **Blueprint Ranking** | `BlueprintRecommendationService`, `BlueprintLibraryService` | Blend curated exemplars with LLM output and score the recommended actions. |
 | **Synthesis** | `CodeTemplateEngine`, `RuntimeTypeAdapters`, `GuardrailEvaluator`, `CodeGenService` | Render Apex/test source code from blueprints, enforce guardrails, and normalize input types. |
 | **Planning** | `DynamicActionPlanner`, `PlanModels` | Assemble a runtime plan (actions, dependencies, checkpoint messaging). |
 | **Runtime** | `DynamicActionPipeline`, `DynamicActionOrchestrator`, `InvocableActionFactory` | Drive the full pipeline, deploy artifacts, and execute generated actions. |

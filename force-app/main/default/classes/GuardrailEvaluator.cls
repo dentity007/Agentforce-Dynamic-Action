@@ -31,6 +31,10 @@ public with sharing class GuardrailEvaluator {
                 enforceEnumAllowed(guardrail, normalized, errors);
                 continue;
             }
+            if (type == 'PII_REDACT') {
+                enforcePiiRedaction(guardrail, normalized, errors);
+                continue;
+            }
             if (type == 'SHARING_REQUIRED') {
                 ensureSharing(describeResult == null ? describe(sobjectApiName) : describeResult, guardrail, errors);
                 continue;
@@ -108,6 +112,25 @@ public with sharing class GuardrailEvaluator {
             String msg = !String.isBlank(guardrail.message)
                 ? guardrail.message
                 : fieldName + ' must be between ' + String.valueOf(min) + ' and ' + String.valueOf(max) + '.';
+            errors.add(msg);
+        }
+    }
+
+    private static void enforcePiiRedaction(PlanModels.Guardrail guardrail, Map<String, Object> normalized, List<String> errors) {
+        List<String> fields = toStringList(guardrail.params != null ? guardrail.params.get('fields') : null);
+        if (fields.isEmpty() || normalized == null) {
+            return;
+        }
+        List<String> flagged = new List<String>();
+        for (String fieldName : fields) {
+            if (normalized.containsKey(fieldName) && normalized.get(fieldName) != null && String.valueOf(normalized.get(fieldName)).trim() != '') {
+                flagged.add(fieldName);
+            }
+        }
+        if (!flagged.isEmpty()) {
+            String msg = !String.isBlank(guardrail.message)
+                ? guardrail.message
+                : 'Fields require redaction before execution: ' + String.join(flagged, ', ');
             errors.add(msg);
         }
     }

@@ -1,6 +1,7 @@
 # Documentation Index
 
 - [`architecture.md`](architecture.md) – Layered design overview and roadmap.
+- [`blueprints/README.md`](../blueprints/README.md) – Curated blueprint catalog and tags.
 - [`schema-intent.md`](schema-intent.md) – Turnkey schema → recommendation → implementation pipeline.
 - [`blueprint-contract.md`](blueprint-contract.md) – JSON schema for `ActionBlueprint` objects.
 - [`guardrails.md`](guardrails.md) – Supported guardrail types and extension guidance.

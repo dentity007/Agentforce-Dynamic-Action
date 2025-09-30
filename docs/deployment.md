@@ -44,3 +44,17 @@ For rapid prototyping, insert directly into the Tooling API `ApexClass` and `Ape
   2. Runs the pipeline for approved goals.
   3. Writes artifacts to the repo and opens a pull request.
 - Use branch policies to require Apex tests before merging auto-generated code.
+
+## Automation Script
+
+Use `scripts/deploy_artifacts.py` to persist and deploy artifacts in one step.
+
+```bash
+# Write pipeline.artifacts to a JSON file first
+echo $PIPELINE_JSON > /tmp/pipeline-artifacts.json
+
+# Deploy and run local tests
+python3 scripts/deploy_artifacts.py /tmp/pipeline-artifacts.json --run-tests --wait 30
+```
+
+The script writes Apex/test classes to a temporary workspace, runs `sfdx force:source:deploy`, and (optionally) executes `sfdx force:apex:test:run`. The command exits non-zero if deployment or tests fail, making it CI-friendly.

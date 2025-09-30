@@ -6,7 +6,7 @@ Use the evaluation harness to benchmark dynamic action generation over time.
 
 - **GenerationBenchmark.cls** – Apex utility that compares generated outputs against golden expectations.
 - **GenerationBenchmark_Test.cls** – Unit tests that ensure the harness executes.
-- **evaluations/golden/** – Human-readable copies of golden blueprints and expected code fragments.
+- **tests/generation/golden/** – Human-readable copies of golden blueprints and expected code fragments.
 
 ## Running Manually
 
@@ -25,9 +25,15 @@ Use the evaluation harness to benchmark dynamic action generation over time.
 
 ## Adding Scenarios
 
+Review `tests/generation/cases.json` for the current catalog.
+
 1. Add a new case to `GenerationBenchmark.goldenCases()` with a golden blueprint JSON string.
-2. Drop supporting reference files into `evaluations/golden/` for documentation.
-3. Update `evaluations/README.md` to describe the new scenario.
+2. Drop supporting reference files into `tests/generation/golden/` for documentation.
+3. Update `tests/generation/README.md` to describe the new scenario.
 4. Run `sfdx force:apex:test:run` to ensure the benchmark tests pass.
 
 Consistently running the harness helps surface regressions between heuristic and LLM outputs and documents expected behavior for critical business goals.
+
+### CLI Helper
+
+Run `tests/generation/run.sh` to execute the benchmark via `sfdx force:apex:execute` and print the summary to stdout.

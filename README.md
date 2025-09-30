@@ -52,7 +52,7 @@ Key Apex entry points:
    ```
 
 4. **Deploy artifacts**
-   Persist the generated Apex/test maps to metadata files or push through the Metadata API. A helper deployment script is outlined in `docs/deployment.md`.
+   Persist the generated Apex/test maps to metadata files or push through the Metadata API. A helper deployment script (`scripts/deploy_artifacts.py`) is outlined in `docs/deployment.md`.
 
 5. **Run tests**
    ```bash
@@ -111,7 +111,7 @@ Blueprints may come from:
 
 - **Template Tokens** – Extend `CodeTemplateEngine` to add Flow or SOQL emitters and bundle them in `CodeGenService`.
 - **Telemetry** – Capture prompt/response pairs through a custom `LLMClient` implementation and store in an analytics object.
-- **Domain Libraries** – Replace or augment the heuristics with curated blueprint libraries for your vertical.
+- **Domain Libraries** – Replace or augment the heuristics with curated blueprint libraries for your vertical (`/blueprints`).
 - **Deployment Automation** – Add CI tasks that persist generated artifacts directly into the repo or packaging pipelines.
 
 See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` for hands-on guides.
@@ -121,8 +121,8 @@ See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` f
 ## Evaluation & Regression Tracking
 
 - Run `GenerationBenchmark.summarize()` to compare current generation output with golden blueprints.
-- Review `docs/evaluation.md` and `evaluations/README.md` for adding scenarios and wiring the benchmark into CI.
-- Golden reference assets live under `evaluations/golden/` so the expected behavior stays visible in code review.
+- Review `docs/evaluation.md` and `tests/generation/README.md` for adding scenarios and wiring the benchmark into CI.
+- Golden reference assets live under `tests/generation/golden/` so the expected behavior stays visible in code review.
 
 ## Contributing
 

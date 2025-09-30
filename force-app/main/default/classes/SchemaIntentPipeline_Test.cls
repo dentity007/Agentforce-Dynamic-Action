@@ -11,6 +11,7 @@ private class SchemaIntentPipeline_Test {
         System.assertNotEquals(null, result.schema, 'Schema snapshot should be returned.');
         System.assert(result.schema.containsKey('objects'), 'Schema snapshot should include objects data.');
         System.assert(result.recommendations != null && !result.recommendations.isEmpty(), 'Recommendations should be present.');
+        System.assertNotEquals(null, result.recommendations[0].source, 'Recommendation should include source metadata.');
         System.assertNotEquals(null, result.plan, 'Plan should be created.');
         System.assert(result.plan.actions.size() == result.artifacts.apex.size(), 'Each action should yield an Apex artifact.');
     }

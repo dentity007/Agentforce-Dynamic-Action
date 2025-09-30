@@ -1,0 +1,17 @@
+[
+  {
+    "file": "sales_opportunity_stage.json",
+    "tags": ["sales", "opportunity", "update"],
+    "description": "Updates opportunity stage with enumerated values and FLS guardrails."
+  },
+  {
+    "file": "sales_follow_up_task.json",
+    "tags": ["sales", "task", "pii"],
+    "description": "Creates follow-up task with sharing and privacy guardrails."
+  },
+  {
+    "file": "inventory_reservation.json",
+    "tags": ["inventory", "task", "quantity"],
+    "description": "Creates inventory reservation task with numeric guardrail."
+  }
+]

@@ -15,7 +15,7 @@ Use the evaluation harness to sanity check dynamic action generation across gold
 
 ## Golden Artifacts
 
-Reference blueprints and expected fragments are stored under `evaluations/golden/` for easy review and updates.
+Reference blueprints and expected fragments are stored under `tests/generation/golden/` for easy review and updates.
 
 | File | Description |
 |------|-------------|
@@ -29,5 +29,9 @@ Reference blueprints and expected fragments are stored under `evaluations/golden
 ## Automating Regressions
 
 - Add a CI step that calls `GenerationBenchmark.summarize()` and fails the build when any case reports `false`.
-- Extend the harness with additional cases by updating `GenerationBenchmark.cls` and adding matching documents in `evaluations/golden/`.
+- Extend the harness with additional cases by updating `GenerationBenchmark.cls` and adding matching documents in `tests/generation/golden/`.
 - Capture LLM vs. heuristic comparisons by overriding `LLMClientGateway` during the benchmark run.
+
+### CLI Helper
+
+Execute `tests/generation/run.sh` to run the benchmark via the Salesforce CLI and print the summary output.

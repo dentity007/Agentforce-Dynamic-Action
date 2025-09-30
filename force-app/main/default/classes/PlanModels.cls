@@ -56,7 +56,13 @@ public with sharing class PlanModels {
         @AuraEnabled public String name;
         @AuraEnabled public Decimal score;
         @AuraEnabled public String rationale;
+        @AuraEnabled public String source;
+        @AuraEnabled public List<String> tags;
         @AuraEnabled public ActionBlueprint blueprint;
+
+        public Recommendation() {
+            tags = new List<String>();
+        }
     }
 
     public class PipelineResult {
