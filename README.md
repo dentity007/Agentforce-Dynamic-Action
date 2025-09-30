@@ -15,7 +15,12 @@ The repository is ready to run with a stubbed LLM client so you can experiment o
 | Path | Purpose |
 |------|---------|
 | `force-app/main/default/classes/` | Apex sources for blueprint generation, template rendering, orchestration, and tests. |
+| `force-app/main/default/staticresources/` | Curated blueprint library (zip) |
+| `blueprints/` | Raw JSON blueprints (dev-time) |
 | `docs/` | Architecture notes, blueprint schema contract, guardrail catalogue, and integration guides. |
+| `scripts/` | CLI helper files (bash, apex, node) |
+| `config/` | Scratch org def if you don't already have it |
+| `.github/workflows/` | CI |
 | `sfdx-project.json` | Salesforce DX project descriptor. |
 
 Key Apex entry points:
