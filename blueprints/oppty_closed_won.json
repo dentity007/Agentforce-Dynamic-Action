@@ -1,0 +1,21 @@
+{
+  "name": "UpdateOpportunityStage",
+  "label": "Update Opportunity Stage",
+  "category": "DOMAIN",
+  "targetSObject": "Opportunity",
+  "operation": "UPDATE",
+  "summary": "Updated Opportunity stage to Closed Won with optional close date.",
+  "checkpoint": "I will update the Opportunity stage to Closed Won. Proceed?",
+  "keyFields": ["Id"],
+  "inputs": [
+    { "apiName": "Id", "fieldApiName": "Id", "label": "Opportunity Id", "dataType": "Id", "required": true, "usage": "FIELD" },
+    { "apiName": "StageName", "fieldApiName": "StageName", "label": "New Stage", "dataType": "String", "required": true, "usage": "FIELD" },
+    { "apiName": "CloseDate", "fieldApiName": "CloseDate", "label": "Close Date", "dataType": "Date", "required": false, "usage": "FIELD" }
+  ],
+  "guardrails": [
+    { "type": "FLS_EDIT", "params": { "fields": ["Id", "StageName", "CloseDate"] } },
+    { "type": "ENUM_ALLOWED", "params": { "field": "StageName", "values": ["Prospecting", "Qualification", "Value Proposition", "Closed Won", "Closed Lost"] } }
+  ],
+  "tags": ["sales", "opportunity", "closedwon"],
+  "description": "Updates Opportunity stage to Closed Won with guardrails ensuring valid stage values."
+}

@@ -1,0 +1,9 @@
+{
+  "orgName": "DynamicAction",
+  "edition": "Enterprise",
+  "features": ["EnableSetPasswordInApi", "SalesforceCRM"],
+  "settings": {
+    "opportunitySettings": { "enableOpportunityTeam": false },
+    "lightningExperienceSettings": { "enableS1DesktopEnabled": true }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "QualifyLead",
+  "label": "Qualify Lead",
+  "category": "DOMAIN",
+  "targetSObject": "Lead",
+  "operation": "UPDATE",
+  "summary": "Qualified a lead and updated status, rating, and converted flags.",
+  "checkpoint": "I will qualify the lead and update its status. Proceed?",
+  "keyFields": ["Id"],
+  "inputs": [
+    { "apiName": "Id", "fieldApiName": "Id", "label": "Lead Id", "dataType": "Id", "required": true, "usage": "FIELD" },
+    { "apiName": "Status", "fieldApiName": "Status", "label": "Lead Status", "dataType": "String", "required": true, "usage": "FIELD" },
+    { "apiName": "Rating", "fieldApiName": "Rating", "label": "Lead Rating", "dataType": "String", "required": false, "usage": "FIELD" },
+    { "apiName": "IsConverted", "fieldApiName": "IsConverted", "label": "Converted?", "dataType": "Boolean", "required": false, "usage": "FIELD" }
+  ],
+  "guardrails": [
+    { "type": "FLS_EDIT", "params": { "fields": ["Status", "Rating", "IsConverted"] } },
+    { "type": "ENUM_ALLOWED", "params": { "field": "Status", "values": ["New", "Working", "Qualified", "Unqualified"] } }
+  ],
+  "tags": ["sales", "lead", "qualification"],
+  "description": "Qualifies leads by setting status and optional rating with FLS and enum guardrails."
+}

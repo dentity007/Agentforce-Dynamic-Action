@@ -28,39 +28,39 @@ Key Apex entry points:
 
 ## Quick Start
 
+### One-command setup
+```bash
+./scripts/init.sh
+```
+This script spins up a scratch org, deploys source, assigns the runtime permset, generates the sample action, deploys the artifacts, and runs tests.
+Requires Node.js 18+, the Salesforce `sf` CLI, and a configured Dev Hub (`SFDX_AUTH_URL`).
+
+### If you don't use bash
 1. **Clone & Authorize**
    ```bash
    git clone <repo>
    cd Agentforce-Dynamic-Action
-   sfdx force:org:create -f config/project-scratch-def.json -a dynamicAction -s
-   sfdx force:source:push
+   sf org create scratch -f config/project-scratch-def.json -a dynamicAction -s
+   sf project deploy start -o dynamicAction
    ```
-
-2. **(Optional) Register an LLM client**
-   Implement `LLMClientGateway.LLMClient` in your org and call `LLMClientGateway.register(new YourClient())` from a setup script. Until then the stub heuristics will map common goals to example blueprints.
-
-3. **Generate code**
-   Execute from the Developer Console or anonymous Apex:
-   ```apex
-   DynamicActionPipeline.Result result = DynamicActionPipeline.execute(
-       'Update an opportunity to Closed Won',
-       null,
-       null
-   );
-   System.debug(result.plan);
-   System.debug(result.artifacts);
+2. **Assign runtime permissions**
+   ```bash
+   sf org assign permset -n DynamicAction_Permissions -o dynamicAction
    ```
-
-4. **Deploy artifacts**
-   Persist the generated Apex/test maps to metadata files or push through the Metadata API. A helper deployment script (`scripts/deploy_artifacts.py`) is outlined in `docs/deployment.md`.
-
+3. **(Optional) Register an LLM client**
+   Edit `scripts/register-llm.apex` and run `sf apex run -o dynamicAction -f scripts/register-llm.apex`. Until then the stub heuristics will map common goals to example blueprints.
+4. **Generate code artifacts**
+   ```bash
+   mkdir -p .tmp
+   sf apex run -o dynamicAction -f scripts/generate.apex --json > .tmp/generate.json
+   node scripts/deploy-artifacts.js .tmp/generate.json dynamicAction
+   ```
 5. **Run tests**
    ```bash
-   sfdx force:apex:test:run -l RunLocalTests -r human
+   sf apex run test -o dynamicAction -l RunLocalTests -r human
    ```
 
 ---
-
 ## End-to-End Pipeline
 
 Use `SchemaIntentPipeline` to execute the full schema → recommendation → implementation flow in one call.

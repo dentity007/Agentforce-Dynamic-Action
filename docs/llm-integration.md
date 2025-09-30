@@ -65,3 +65,15 @@ Track prompt/response pairs to a custom object for observability:
 - Post-generation validation results (parse success, guardrail failures)
 
 Telemetry helps build feedback loops to improve prompt engineering and identify hallucinations early.
+
+## Named Credential Quick Start
+
+1. Deploy `namedCredentials/LLM_Provider.namedCredential-meta.xml`.
+2. Update the endpoint/credential on the Named Credential in Setup.
+3. Implement an `LLMClientGateway.LLMClient` that issues callouts via the Named Credential:
+   ```apex
+   HttpRequest req = new HttpRequest();
+   req.setEndpoint('callout:LLM_Provider');
+   req.setMethod('POST');
+   // add body / headers
+   ```

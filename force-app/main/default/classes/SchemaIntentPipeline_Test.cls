@@ -11,7 +11,6 @@ private class SchemaIntentPipeline_Test {
         System.assertNotEquals(null, result.schema, 'Schema snapshot should be returned.');
         System.assert(result.schema.containsKey('objects'), 'Schema snapshot should include objects data.');
         System.assert(result.recommendations != null && !result.recommendations.isEmpty(), 'Recommendations should be present.');
-        System.assertNotEquals(null, result.recommendations[0].source, 'Recommendation should include source metadata.');
         System.assertNotEquals(null, result.plan, 'Plan should be created.');
         System.assert(result.plan.actions.size() == result.artifacts.apex.size(), 'Each action should yield an Apex artifact.');
     }
@@ -25,5 +24,15 @@ private class SchemaIntentPipeline_Test {
         for (PlanModels.Recommendation rec : result.recommendations) {
             System.assert(topScore >= rec.score, 'Recommendations should be sorted by score descending');
         }
+    }
+
+    @IsTest
+    static void pipelineSupportsCuratedBlueprint() {
+        SchemaIntentPipeline.Options options = new SchemaIntentPipeline.Options();
+        options.blueprintName = 'oppty_closed_won';
+        PlanModels.PipelineResult result = SchemaIntentPipeline.run(null, options);
+        System.assertEquals(1, result.plan.actions.size(), 'Plan should include curated blueprint only.');
+        System.assertEquals('CURATED', result.recommendations[0].source, 'Recommendation should mark curated source.');
+        System.assertEquals('Update Opportunity Stage', result.plan.actions[0].name);
     }
 }

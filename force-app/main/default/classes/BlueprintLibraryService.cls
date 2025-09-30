@@ -13,6 +13,26 @@ public with sharing class BlueprintLibraryService {
         return cachedEntries.deepClone(true);
     }
 
+    public static BlueprintLibraryData.LibraryEntry getEntry(String name) {
+        if (String.isBlank(name)) {
+            return null;
+        }
+        for (BlueprintLibraryData.LibraryEntry entry : allEntries()) {
+            if (entry != null && String.valueOf(entry.name).equalsIgnoreCase(name)) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    public static PlanModels.ActionBlueprint getBlueprint(String name) {
+        BlueprintLibraryData.LibraryEntry entry = getEntry(name);
+        if (entry == null || entry.blueprint == null) {
+            return null;
+        }
+        return (PlanModels.ActionBlueprint) JSON.deserialize(JSON.serialize(entry.blueprint), PlanModels.ActionBlueprint.class);
+    }
+
     public static List<MatchResult> findMatches(String goal, Map<String, Object> schemaSlice, Integer limit) {
         List<MatchResult> matches = new List<MatchResult>();
         String normalizedGoal = (goal == null) ? '' : goal.toLowerCase();

@@ -33,6 +33,7 @@ PlanModels.PipelineResult pipeline = SchemaIntentPipeline.run(
 - `schemaOptions.maxObjects` – Limit the number of objects included in the snapshot.
 - `schemaOptions.maxFieldsPerObject` – Limit field detail per object to keep prompts concise.
 - `schemaOptions.includeRelationships` – When `true`, child relationships are surfaced for deeper graph prompts.
+- `blueprintName` – Provide a curated blueprint key (see `BlueprintLibrary.listEntries`) to bypass LLM recommendations.
 - `constraints` – Pass model hints or guardrail directives directly to `BlueprintSynthesisService`.
 
 ## Next Steps

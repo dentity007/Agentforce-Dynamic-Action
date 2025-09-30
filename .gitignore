@@ -20,3 +20,4 @@ coverage/
 /tmp/
 *.zip
 node_modules/
+.tmp/

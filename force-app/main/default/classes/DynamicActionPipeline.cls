@@ -10,4 +10,23 @@ public with sharing class DynamicActionPipeline {
         result.artifacts = CodeGenService.generate(result.plan.actions);
         return result;
     }
+
+    public static Result executeWithBlueprint(String blueprintName, Map<String, Object> schemaSlice, Map<String, Object> constraints) {
+        PlanModels.ActionBlueprint blueprint = BlueprintLibraryService.getBlueprint(blueprintName);
+        if (blueprint == null) {
+            throw new AuraHandledException('Unknown curated blueprint: ' + blueprintName);
+        }
+        List<PlanModels.ActionBlueprint> blueprints = new List<PlanModels.ActionBlueprint>{ blueprint };
+        PlanModels.Plan plan = DynamicActionPlanner.buildPlan(
+            String.isBlank(blueprint.label) ? blueprint.name : blueprint.label,
+            schemaSlice,
+            constraints,
+            blueprints
+        );
+        Result result = new Result();
+        result.plan = plan;
+        result.artifacts = CodeGenService.generate(plan.actions);
+        return result;
+    }
+
 }
