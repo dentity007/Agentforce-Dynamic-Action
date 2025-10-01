@@ -112,19 +112,7 @@ RecommendFunctionalities.Response r = RecommendFunctionalities.run(narrative, in
 System.debug(JSON.serializePretty(r));
 ```
 
-Or, provide an external schema snapshot gathered by a Data‑Aware agent:
-
-```apex
-Map<String, Object> externalSchema = new Map<String, Object>{
-    'objects' => new List<Object>{
-        new Map<String, Object>{
-            'apiName' => 'Opportunity',
-            'fields' => new List<Object>{ new Map<String, Object>{ 'apiName' => 'StageName' } }
-        }
-    }
-};
-RecommendFunctionalities.Response r = RecommendFunctionalities.runWithSchema(narrative, externalSchema, 3);
-```
+If you already have an external schema snapshot (from a Data‑Aware agent), use `SchemaIntentPipeline.run(goal, externalSchema, options)` to blend recommendations and synthesis in one call (see End-to-End Pipeline above).
 
 **Step 3: Generate from Top Recommendation**
 ```apex
