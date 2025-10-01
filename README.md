@@ -259,6 +259,12 @@ See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` f
 CLI helper for Step‑2
 - Run a single scenario: `npm run recommend -- --org <alias> --scenario 2`
 - Run all scenarios: `npm run recommend -- --org <alias> --all`
+
+Local npm aliases
+- Generate artifacts: `npm run generate -- --org <alias>` (writes `.tmp/generate.json`)
+- Deploy generated artifacts: `npm run deploy:artifacts -- --org <alias>`
+- Run Apex tests: `npm run tests -- --org <alias>`
+- Full E2E loop: `npm run e2e -- --org <alias>`
 3. Test basic generation: `sf apex run -f scripts/generate.apex -o <alias>`
 4. Check logs: Add `System.debug()` statements and monitor with `sf apex tail log -o <alias>`
 
