@@ -92,6 +92,34 @@ System.debug(pipeline.artifacts);
 
 Tie the result into `DynamicActionOrchestrator.run` once users confirm the checkpoint displayed in the plan.
 
+## Recommend → Generate
+
+Use the Step-2 recommendation API to get ranked blueprints, then feed the top result into Step-3 code generation.
+
+**Step 2: Get Recommendations**
+```apex
+String narrative = 'For AAA insurance sales, when a deal is approved, set the opportunity to Closed Won.';
+List<String> includeObjects = new List<String>{'Opportunity','Lead','Case'};
+RecommendFunctionalities.Response r = RecommendFunctionalities.run(narrative, includeObjects, 3);
+System.debug(JSON.serializePretty(r));
+```
+
+**Step 3: Generate from Top Recommendation**
+```apex
+// Re-run recommendation for simplicity (or load from Step 2 results)
+String narrative = 'For AAA insurance sales, when a deal is approved, set the opportunity to Closed Won.';
+List<String> includeObjects = new List<String>{'Opportunity'};
+RecommendFunctionalities.Response r = RecommendFunctionalities.run(narrative, includeObjects, 1);
+
+PlanModels.ActionBlueprint bp = r.recommendations.isEmpty() ? null : r.recommendations[0].blueprint;
+DynamicActionPipeline.Result result = DynamicActionPipeline.execute(
+    narrative, // goal
+    bp,        // explicit blueprint from recommendation
+    null       // options
+);
+System.debug(JSON.serialize(result));
+```
+
 ## Input Options
 
 | Mode | How to run | Notes |
@@ -99,6 +127,28 @@ Tie the result into `DynamicActionOrchestrator.run` once users confirm the check
 | Goal text only | `SchemaIntentPipeline.run(goal, options)` with heuristics | Works offline using curated heuristics and guardrails. |
 | Goal text + LLM | Register a client via `scripts/register-llm.apex`, then call `SchemaIntentPipeline.run(goal, options)` | Prompts include schema slice + goal; enable telemetry to capture prompts. |
 | Curated blueprint JSON | `DynamicActionPipeline.executeWithBlueprint('oppty_closed_won', null, null)` or `BlueprintLibrary.getByName(...)` | Bypasses LLM and uses the curated catalog in `/blueprints`. |
+
+### Schema Snapshot Format
+
+If providing external schema snapshots (instead of letting `SchemaSnapshot.buildSnapshot()` gather them), use this JSON structure:
+
+```json
+{
+  "objects": {
+    "Opportunity": {
+      "apiName": "Opportunity",
+      "fields": {
+        "Id": {"apiName": "Id", "type": "Id", "nillable": false, "createable": false, "updateable": false},
+        "StageName": {"apiName": "StageName", "type": "Picklist", "nillable": false, "createable": true, "updateable": true, "picklistValues": ["Prospecting", "Closed Won"]},
+        "CloseDate": {"apiName": "CloseDate", "type": "Date", "nillable": true, "createable": true, "updateable": true}
+      },
+      "childRelationships": ["OpportunityLineItems.OpportunityId"]
+    }
+  }
+}
+```
+
+Each object includes actionable fields (createable/updateable) with their metadata and picklist values where applicable.
 
 ## Result Shape Example
 
@@ -157,10 +207,19 @@ See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` f
 
 ## Troubleshooting
 
-- **Opportunity or Case features disabled** – Use the sample scratch definition in `config/project-scratch-def.json` or enable Sales Cloud features before running scripts.
-- **Permission or guardrail errors** – Assign `DynamicAction_Permissions` to your user (`sf org assign permset -n DynamicAction_Permissions`).
-- **Deployment writes no files** – Ensure `scripts/generate.apex` completed and that Node.js is installed for `scripts/deploy-artifacts.js`.
-- **LLM callouts blocked** – Configure the `LLM_Provider` Named Credential and register a client in `scripts/register-llm.apex`.
+### Common First-Run Issues
+- **FLS/Sharing Errors**: Generated actions include guardrails but may fail if your user lacks FLS on target fields. Assign `DynamicAction_Permissions` or ensure your profile has read/write access to Opportunity/Case fields.
+- **Missing Objects**: If Opportunity or Case objects aren't available, use `config/project-scratch-def.json` which enables Sales Cloud features, or modify `includeObjects` in recommendation calls to use available objects.
+- **LLM Callouts Blocked**: Configure the `LLM_Provider` Named Credential with valid endpoint/credentials, then run `scripts/register-llm.apex` to register your client.
+- **Deployment writes no files**: Ensure `scripts/generate.apex` completed successfully and that Node.js is installed for `scripts/deploy-artifacts.js`.
+- **Permission errors**: Run `sf org assign permset -n DynamicAction_Permissions -o <alias>` after deploying metadata.
+- **Scripts not executable**: Run `chmod +x scripts/*.sh` on Unix systems if scripts fail with "permission denied".
+
+### Debug Steps
+1. Check scratch org features: `sf org display -o <alias>` should show Sales Cloud enabled
+2. Verify permissions: `sf org assign permset -n DynamicAction_Permissions -o <alias>`
+3. Test basic generation: `sf apex run -f scripts/generate.apex -o <alias>`
+4. Check logs: Add `System.debug()` statements and monitor with `sf apex tail log -o <alias>`
 
 ## Contributing
 
