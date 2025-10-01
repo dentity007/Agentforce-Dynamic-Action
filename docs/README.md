@@ -9,6 +9,7 @@
 - [`code-synthesis.md`](code-synthesis.md) – Details on template rendering and generated code structure.
 - [`runtime.md`](runtime.md) – How generated actions execute and integrate at runtime.
 - [`deployment.md`](deployment.md) – Options for persisting and deploying generated artifacts.
+- [`memory-offloading.md`](memory-offloading.md) – Optional offloading for large schema/artifact payloads.
 - [`roadmap.md`](roadmap.md) – Planned enhancements and contribution opportunities.
 - [`evaluation.md`](evaluation.md) – Benchmarking workflow and harness usage.
 

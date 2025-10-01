@@ -4,11 +4,13 @@ public with sharing class SchemaIntentPipeline {
         @AuraEnabled public Map<String, Object> constraints;
         @AuraEnabled public String blueprintName;
         @AuraEnabled public List<String> includeObjects;
+        @AuraEnabled public OffloadModels.Options offloadOptions;
 
         public Options() {
             schemaOptions = new SchemaSnapshotService.Options();
             constraints = new Map<String, Object>();
             includeObjects = new List<String>();
+            offloadOptions = new OffloadModels.Options();
         }
     }
 
@@ -62,6 +64,10 @@ public with sharing class SchemaIntentPipeline {
         PlanModels.Plan plan = DynamicActionPlanner.buildPlan(effectiveGoal, resolvedSchema, resolved.constraints, actionBlueprints);
         result.plan = plan;
         result.artifacts = CodeGenService.generate(plan.actions);
+
+        // Optional offloading
+        maybeOffloadSchema(result, resolved.offloadOptions);
+        maybeOffloadArtifacts(result, resolved.offloadOptions);
         return result;
     }
 
@@ -83,5 +89,34 @@ public with sharing class SchemaIntentPipeline {
         }
         SchemaSnapshot snapshot = SchemaSnapshot.buildSnapshot(objectSet);
         return (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(snapshot));
+    }
+    private static void maybeOffloadSchema(PlanModels.PipelineResult result, OffloadModels.Options opts) {
+        if (result == null || result.schema == null || opts == null || opts.offloadSchema != true) return;
+        String json = JSON.serialize(result.schema);
+        Integer sizeBytes = Blob.valueOf(json).size();
+        Integer threshold = (opts.sizeThresholdKB == null || opts.sizeThresholdKB <= 0) ? 64 : opts.sizeThresholdKB;
+        if (sizeBytes < threshold * 1024) return;
+        OffloadModels.Ref r = MemoryOffloadService.tryOffload(opts.schemaStore, json);
+        if (r != null) {
+            result.schemaRef = r;
+            result.schema = new Map<String, Object>();
+        }
+    }
+
+    private static void maybeOffloadArtifacts(PlanModels.PipelineResult result, OffloadModels.Options opts) {
+        if (result == null || result.artifacts == null || opts == null || opts.offloadArtifacts != true) return;
+        String json = JSON.serialize(result.artifacts);
+        Integer sizeBytes = Blob.valueOf(json).size();
+        Integer threshold = (opts.sizeThresholdKB == null || opts.sizeThresholdKB <= 0) ? 64 : opts.sizeThresholdKB;
+        if (sizeBytes < threshold * 1024) return;
+        OffloadModels.Ref r = MemoryOffloadService.tryOffload(opts.artifactsStore, json);
+        if (r != null) {
+            result.artifactsRef = r;
+            // keep minimal metadata to signal offloaded
+            result.artifacts = new PlanModels.CodeArtifacts();
+            result.artifacts.metadata.put('offloaded', true);
+            result.artifacts.metadata.put('refStore', r.store);
+            result.artifacts.metadata.put('refKey', r.key);
+        }
     }
 }

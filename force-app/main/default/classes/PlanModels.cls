@@ -70,6 +70,8 @@ public with sharing class PlanModels {
         @AuraEnabled public List<Recommendation> recommendations;
         @AuraEnabled public Plan plan;
         @AuraEnabled public CodeArtifacts artifacts;
+        @AuraEnabled public OffloadModels.Ref schemaRef;
+        @AuraEnabled public OffloadModels.Ref artifactsRef;
 
         public PipelineResult() {
             schema = new Map<String, Object>();

@@ -219,6 +219,31 @@ Curated blueprint keys available out of the box:
 - `quote_line_discount_set` – Set discount on quote line item
 - `task_create` – Create a new task with basic information
 
+---
+## Memory Offloading (Optional)
+
+Off by default. Enables offloading large JSON payloads (schema snapshots and artifacts) to reduce heap pressure. Falls back to inline if a store is unavailable.
+
+- Per‑run options: set `SchemaIntentPipeline.Options.offloadOptions` or use `DynamicActionPipeline.executeWithOptions` / `executeFromBlueprintWithOptions`.
+
+Example:
+```apex
+OffloadModels.Options off = new OffloadModels.Options();
+off.offloadArtifacts = true;     // only offload artifacts
+off.sizeThresholdKB = 64;        // if > 64KB
+off.artifactsStore = 'ContentVersion';
+
+// Combined pipeline
+SchemaIntentPipeline.Options opts = new SchemaIntentPipeline.Options();
+opts.offloadOptions = off;
+PlanModels.PipelineResult pipe = SchemaIntentPipeline.run('...', opts);
+
+// Generation-only
+DynamicActionPipeline.Result r = DynamicActionPipeline.executeWithOptions('...', null, null, off);
+```
+
+See docs/memory-offloading.md for details and tradeoffs.
+
 ## Result Shape Example
 
 ```jsonc
