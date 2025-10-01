@@ -255,6 +255,10 @@ See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` f
     - Locally, retrieve with: `sf org display --verbose -o <DevHubAlias>` and copy “Sfdx Auth Url”.
   - JWT: add `SF_CONSUMER_KEY`, `SF_JWT_KEY` (private key PEM), `SF_USERNAME` (Dev Hub username).
 - The workflow never exposes secrets to forked PRs; it runs on repo PRs, pushes to `main`, and `workflow_dispatch`.
+
+CLI helper for Step‑2
+- Run a single scenario: `node scripts/recommend-cli.js --org <alias> --scenario 2`
+- Run all scenarios: `node scripts/recommend-cli.js --org <alias> --all`
 3. Test basic generation: `sf apex run -f scripts/generate.apex -o <alias>`
 4. Check logs: Add `System.debug()` statements and monitor with `sf apex tail log -o <alias>`
 
