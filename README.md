@@ -242,6 +242,15 @@ See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` f
 ### Debug Steps
 1. Check scratch org features: `sf org display -o <alias>` should show Sales Cloud enabled
 2. Verify permissions: `sf org assign permset -n DynamicAction_Permissions -o <alias>`
+
+---
+**Continuous Integration**
+- `e2e.yml` runs the full recommend → synthesize → deploy → test loop on PRs from this repo and pushes to `main`.
+- Secrets required (choose one auth method):
+  - SFDX URL: add `SFDX_AUTH_URL` under GitHub → Settings → Secrets → Actions.
+    - Locally, retrieve with: `sf org display --verbose -o <DevHubAlias>` and copy “Sfdx Auth Url”.
+  - JWT: add `SF_CONSUMER_KEY`, `SF_JWT_KEY` (private key PEM), `SF_USERNAME` (Dev Hub username).
+- The workflow never exposes secrets to forked PRs; it runs on repo PRs, pushes to `main`, and `workflow_dispatch`.
 3. Test basic generation: `sf apex run -f scripts/generate.apex -o <alias>`
 4. Check logs: Add `System.debug()` statements and monitor with `sf apex tail log -o <alias>`
 

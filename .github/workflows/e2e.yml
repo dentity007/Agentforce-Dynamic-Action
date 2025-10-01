@@ -17,7 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
+      # Option A: SFDX Auth URL (simple)
       SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
+      # Option B: JWT (connected app)
+      SF_CONSUMER_KEY: ${{ secrets.SF_CONSUMER_KEY }}
+      SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
+      SF_USERNAME: ${{ secrets.SF_USERNAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,15 +35,26 @@ jobs:
       - name: Install Salesforce CLI
         run: npm install --global @salesforce/cli
 
-      - name: Auth Dev Hub
+      - name: Auth Dev Hub (JWT or SFDX URL)
         shell: bash
         run: |
-          if [ -z "$SFDX_AUTH_URL" ]; then
-            echo "SFDX_AUTH_URL secret not set" >&2
+          set -euo pipefail
+          if [[ -n "${SF_CONSUMER_KEY:-}" && -n "${SF_JWT_KEY:-}" && -n "${SF_USERNAME:-}" ]]; then
+            echo "Using JWT auth" >&2
+            echo "$SF_JWT_KEY" > server.key
+            sf org login jwt \
+              --client-id "$SF_CONSUMER_KEY" \
+              --jwt-key-file server.key \
+              --username "$SF_USERNAME" \
+              -a DevHub -s
+          elif [[ -n "${SFDX_AUTH_URL:-}" ]]; then
+            echo "Using SFDX auth URL" >&2
+            echo "$SFDX_AUTH_URL" > sfdx-url.txt
+            sf org login sfdx-url --sfdx-url-file sfdx-url.txt -a DevHub -s
+          else
+            echo "No auth secrets set. Provide SFDX_AUTH_URL or JWT secrets (SF_CONSUMER_KEY, SF_JWT_KEY, SF_USERNAME)." >&2
             exit 1
           fi
-          echo "$SFDX_AUTH_URL" > sfdx-url.txt
-          sf org login sfdx-url --sfdx-url-file sfdx-url.txt -a DevHub -s
 
       - name: Build curated blueprint library
         run: node scripts/build-blueprint-library.js
@@ -57,4 +73,3 @@ jobs:
       - name: Delete scratch org
         if: always()
         run: sf org delete scratch -o dynamicAction -p
-
