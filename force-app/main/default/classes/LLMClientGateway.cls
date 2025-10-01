@@ -23,6 +23,10 @@ public with sharing class LLMClientGateway {
         registeredClient = client;
     }
 
+    public static Boolean isRegistered() {
+        return registeredClient != null;
+    }
+
     public static LLMClient resolve() {
         if (registeredClient != null) {
             return registeredClient;

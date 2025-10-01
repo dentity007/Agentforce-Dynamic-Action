@@ -2,7 +2,12 @@ public with sharing class LLMRanker {
     public static List<HeuristicRanker.Recommendation> tryRank(String narrative, SchemaSnapshot snap, List<PlanModels.ActionBlueprint> cands, Integer topK) {
         if (!LLMClientGateway.isRegistered()) return new List<HeuristicRanker.Recommendation>();
         String prompt = buildPrompt(narrative, snap, cands);
-        String raw = LLMClientGateway.current().complete(prompt);
+        LLMClientGateway.LLMRequest req = new LLMClientGateway.LLMRequest();
+        req.prompt = prompt;
+        req.model = 'gpt-4o-mini'; // or whatever default
+        req.temperature = 0;
+        req.maxTokens = 1024;
+        String raw = LLMClientGateway.resolve().complete(req);
         List<Object> arr = (List<Object>) JSON.deserializeUntyped(raw); // [{name,score,rationale}]
         Map<String, HeuristicRanker.Recommendation> byName = new Map<String, HeuristicRanker.Recommendation>();
         for (Object o : arr) {
