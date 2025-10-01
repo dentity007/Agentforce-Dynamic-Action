@@ -7,7 +7,7 @@ Planned enhancements for Agentforce Dynamic Action.
 - **Schema Services** – Port metadata discovery (`SchemaGraphStore`, `MetadataDiscovery`) from the legacy repo and expose them via `schema/` package.
 - **Deployment Utilities** – Provide Apex util classes to persist generated artifacts automatically (Metadata API wrapper).
 - **Expanded Guardrails** – Add privacy classification, rate limiting, and record-level sharing policies.
-- **Blueprint Library** – Seed a catalog of curated blueprints for common Sales/Service scenarios.
+- **✅ Blueprint Library** – Seed a catalog of curated blueprints for common Sales/Service scenarios. *(Completed: 24+ blueprints covering Sales/Service/SaaS/CPQ/Marketing domains)*
 
 ## Mid Term
 

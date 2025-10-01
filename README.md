@@ -169,14 +169,30 @@ Each object includes actionable fields (createable/updateable) with their metada
 Recommendation ranking blends curated exemplars (from `/blueprints`, built into the `BlueprintLibrary` static resource) with LLM/heuristic suggestions. Tags in curated entries (e.g., object names, verbs like Update/Convert, guardrail hints) are used to score proximity to the narrative and schema.
 
 Curated blueprint keys available out of the box:
-- `opportunity_closed_won`
-- `oppty_closed_won`
-- `lead_qualify`
-- `case_escalate`
-- `case_escalate_tier2`
-- `lead_mark_qualified`
-- `opportunity_close_lost`
-- `case_create_followup_task`
+- `account_create` – Create a new account with basic information
+- `case_create` – Create a new case with subject, description, and priority
+- `case_create_followup_task` – Create a follow-up task tied to a case
+- `case_escalate` – Escalate case with new priority and owner
+- `case_escalate_tier2` – Escalate case to Tier 2 with priority/status updates
+- `campaign_create` – Create a new campaign with basic information
+- `campaign_member_add` – Add contact/lead to a campaign
+- `contact_create` – Create a new contact with basic information
+- `contract_create` – Create a new contract with account and dates
+- `event_create` – Create a new event with scheduling details
+- `lead_create` – Create a new lead with basic information
+- `lead_mark_qualified` – Move lead to qualified state with rating
+- `lead_qualify` – Qualify lead and update status/rating
+- `opportunity_close_lost` – Mark opportunity as Closed Lost with reason
+- `opportunity_closed_won` – Set opportunity to Closed Won (legacy format)
+- `opportunity_create` – Create a new opportunity with basic information
+- `oppty_closed_won` – Set opportunity to Closed Won with CloseDate
+- `order_create` – Create a new order with account and effective date
+- `pricebook_entry_create` – Create pricebook entry with product and pricing
+- `product_create` – Create a new product with basic information
+- `quote_create` – Create a new quote with opportunity and expiration
+- `quote_line_create` – Create quote line item with product and quantity
+- `quote_line_discount_set` – Set discount on quote line item
+- `task_create` – Create a new task with basic information
 
 ## Result Shape Example
 

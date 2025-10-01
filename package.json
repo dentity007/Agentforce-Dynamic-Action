@@ -2,7 +2,7 @@
   "name": "agentforce-dynamic-action",
   "private": true,
   "version": "0.0.0",
-  "description": "Helper scripts for Agentforce Dynamic Action",
+  "description": "Helper scripts for Agentforce Dynamic Action - turns natural language goals into executable Salesforce actions with 24+ curated blueprints covering Sales/Service/SaaS/CPQ/Marketing domains",
   "engines": {
     "node": ">=18"
   },
