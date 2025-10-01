@@ -112,6 +112,12 @@ RecommendFunctionalities.Response r = RecommendFunctionalities.run(narrative, in
 System.debug(JSON.serializePretty(r));
 ```
 
+Sample narratives for quick testing (use `scripts/recommend.apex`):
+- Case escalation: For P1 customer issues, escalate the case to Tier 2 and set priority to High.
+- Lead qualification: When an SDR qualifies interest, move the lead to Qualified and set rating to Hot.
+- Opportunity closed-lost: If negotiations fail, mark the opportunity Closed Lost and capture a short loss reason.
+- Case follow-up task: After resolving the issue, create a follow-up task on the case for a satisfaction call.
+
 If you already have an external schema snapshot (from a Data‑Aware agent), use `SchemaIntentPipeline.run(goal, externalSchema, options)` to blend recommendations and synthesis in one call (see End-to-End Pipeline above).
 
 **Step 3: Generate from Top Recommendation**
@@ -161,6 +167,16 @@ If providing external schema snapshots (instead of letting `SchemaSnapshot.build
 Each object includes actionable fields (createable/updateable) with their metadata and picklist values where applicable.
 
 Recommendation ranking blends curated exemplars (from `/blueprints`, built into the `BlueprintLibrary` static resource) with LLM/heuristic suggestions. Tags in curated entries (e.g., object names, verbs like Update/Convert, guardrail hints) are used to score proximity to the narrative and schema.
+
+Curated blueprint keys available out of the box:
+- `opportunity_closed_won`
+- `oppty_closed_won`
+- `lead_qualify`
+- `case_escalate`
+- `case_escalate_tier2`
+- `lead_mark_qualified`
+- `opportunity_close_lost`
+- `case_create_followup_task`
 
 ## Result Shape Example
 
