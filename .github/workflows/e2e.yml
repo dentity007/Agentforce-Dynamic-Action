@@ -1,0 +1,60 @@
+name: E2E
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    # Don’t run secrets on forks; only on PRs from this repository or direct pushes
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Salesforce CLI
+        run: npm install --global @salesforce/cli
+
+      - name: Auth Dev Hub
+        shell: bash
+        run: |
+          if [ -z "$SFDX_AUTH_URL" ]; then
+            echo "SFDX_AUTH_URL secret not set" >&2
+            exit 1
+          fi
+          echo "$SFDX_AUTH_URL" > sfdx-url.txt
+          sf org login sfdx-url --sfdx-url-file sfdx-url.txt -a DevHub -s
+
+      - name: Build curated blueprint library
+        run: node scripts/build-blueprint-library.js
+
+      - name: Run E2E
+        run: ./scripts/e2e.sh dynamicAction
+
+      - name: Upload .tmp artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-tmp
+          path: .tmp
+          if-no-files-found: ignore
+
+      - name: Delete scratch org
+        if: always()
+        run: sf org delete scratch -o dynamicAction -p
+

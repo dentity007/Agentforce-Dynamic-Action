@@ -29,4 +29,18 @@ public with sharing class DynamicActionPipeline {
         return result;
     }
 
+    // New: Execute directly from a provided blueprint (e.g., top recommendation)
+    public static Result executeFromBlueprint(PlanModels.ActionBlueprint blueprint, Map<String, Object> schemaSlice, Map<String, Object> constraints) {
+        if (blueprint == null) {
+            throw new AuraHandledException('Blueprint cannot be null');
+        }
+        List<PlanModels.ActionBlueprint> blueprints = new List<PlanModels.ActionBlueprint>{ blueprint };
+        String goal = String.isBlank(blueprint.label) ? blueprint.name : blueprint.label;
+        PlanModels.Plan plan = DynamicActionPlanner.buildPlan(goal, schemaSlice, constraints, blueprints);
+        Result result = new Result();
+        result.plan = plan;
+        result.artifacts = CodeGenService.generate(plan.actions);
+        return result;
+    }
+
 }

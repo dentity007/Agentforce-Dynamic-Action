@@ -1,7 +1,6 @@
 {
   "orgName": "DynamicAction",
   "edition": "Enterprise",
-  "features": ["SalesforceCRM"],
   "settings": {
     "lightningExperienceSettings": { "enableS1DesktopEnabled": true },
     "opportunitySettings": { "enableOpportunityTeam": false }

@@ -92,6 +92,14 @@ System.debug(pipeline.artifacts);
 
 Tie the result into `DynamicActionOrchestrator.run` once users confirm the checkpoint displayed in the plan.
 
+### One-command E2E (recommend → synthesize → deploy → test)
+
+Run the full loop with a single script. It will: recommend candidates, synthesize from the top result, deploy artifacts, and run tests.
+
+```bash
+./scripts/e2e.sh dynamicAction
+```
+
 ## Recommend → Generate
 
 Use the Step-2 recommendation API to get ranked blueprints, then feed the top result into Step-3 code generation.
@@ -104,6 +112,20 @@ RecommendFunctionalities.Response r = RecommendFunctionalities.run(narrative, in
 System.debug(JSON.serializePretty(r));
 ```
 
+Or, provide an external schema snapshot gathered by a Data‑Aware agent:
+
+```apex
+Map<String, Object> externalSchema = new Map<String, Object>{
+    'objects' => new List<Object>{
+        new Map<String, Object>{
+            'apiName' => 'Opportunity',
+            'fields' => new List<Object>{ new Map<String, Object>{ 'apiName' => 'StageName' } }
+        }
+    }
+};
+RecommendFunctionalities.Response r = RecommendFunctionalities.runWithSchema(narrative, externalSchema, 3);
+```
+
 **Step 3: Generate from Top Recommendation**
 ```apex
 // Re-run recommendation for simplicity (or load from Step 2 results)
@@ -112,10 +134,10 @@ List<String> includeObjects = new List<String>{'Opportunity'};
 RecommendFunctionalities.Response r = RecommendFunctionalities.run(narrative, includeObjects, 1);
 
 PlanModels.ActionBlueprint bp = r.recommendations.isEmpty() ? null : r.recommendations[0].blueprint;
-DynamicActionPipeline.Result result = DynamicActionPipeline.execute(
-    narrative, // goal
-    bp,        // explicit blueprint from recommendation
-    null       // options
+DynamicActionPipeline.Result result = DynamicActionPipeline.executeFromBlueprint(
+    bp,
+    null, // optional schema slice
+    null  // optional constraints
 );
 System.debug(JSON.serialize(result));
 ```
@@ -149,6 +171,8 @@ If providing external schema snapshots (instead of letting `SchemaSnapshot.build
 ```
 
 Each object includes actionable fields (createable/updateable) with their metadata and picklist values where applicable.
+
+Recommendation ranking blends curated exemplars (from `/blueprints`, built into the `BlueprintLibrary` static resource) with LLM/heuristic suggestions. Tags in curated entries (e.g., object names, verbs like Update/Convert, guardrail hints) are used to score proximity to the narrative and schema.
 
 ## Result Shape Example
 

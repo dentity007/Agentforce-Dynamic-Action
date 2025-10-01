@@ -4,9 +4,9 @@ List<String> includeObjects = new List<String>{'Opportunity'};
 RecommendFunctionalities.Response r = RecommendFunctionalities.run(narrative, includeObjects, 1);
 
 PlanModels.ActionBlueprint bp = r.recommendations.isEmpty() ? null : r.recommendations[0].blueprint;
-DynamicActionPipeline.Result result = DynamicActionPipeline.execute(
-    narrative, // goal
-    bp,        // explicit blueprint
-    null       // options
+DynamicActionPipeline.Result result = DynamicActionPipeline.executeFromBlueprint(
+    bp,
+    null,  // schema slice (optional)
+    null   // constraints (optional)
 );
 System.debug(JSON.serialize(result));

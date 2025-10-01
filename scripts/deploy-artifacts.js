@@ -1,55 +1,49 @@
 #!/usr/bin/env node
 const fs = require('fs');
-const path = require('path');
 const cp = require('child_process');
 
-if (process.argv.length < 4) {
-  console.error('Usage: scripts/deploy-artifacts.js <generate-json> <org-alias>');
+const [, , inputPath, alias='dynamicAction'] = process.argv;
+const raw = fs.readFileSync(inputPath, 'utf8');
+
+// try to parse pure JSON first
+let parsed = null;
+try { parsed = JSON.parse(raw); } catch {}
+
+// if it's SF CLI --json output, try to find the debug JSON inside
+function extractArtifacts(obj) {
+  const candidate = obj?.result?.artifacts || obj?.artifacts || null;
+  if (candidate) return candidate;
+  const logs = obj?.result?.logs;
+  if (typeof logs === 'string') {
+    // find last {..."artifacts":{...}...} block
+    const m = logs.match(/\{[\s\S]*"artifacts"\s*:\s*\{[\s\S]*?\}[\s\S]*\}/g);
+    if (m && m.length) {
+      try { return JSON.parse(m[m.length - 1]).artifacts; } catch {}
+    }
+  }
+  return null;
+}
+
+let artifacts = extractArtifacts(parsed);
+
+// as a fallback, scan raw text
+if (!artifacts) {
+  const m = raw.match(/\{[\s\S]*"artifacts"\s*:\s*\{[\s\S]*?\}[\s\S]*\}/g);
+  if (m && m.length) {
+    try { artifacts = JSON.parse(m[m.length - 1]).artifacts; } catch {}
+  }
+}
+if (!artifacts) {
+  console.error('Could not find artifacts JSON in input.');
   process.exit(1);
 }
 
-const [, , jsonPath, alias] = process.argv;
-const raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-
-function extractArtifactPayload(payload) {
-  const candidates = [];
-  if (payload.artifacts) {
-    candidates.push(payload.artifacts);
-  }
-  if (payload.result && payload.result.artifacts) {
-    candidates.push(payload.result.artifacts);
-  }
-  const logs = payload.result && payload.result.logs ? payload.result.logs : [];
-  for (const log of logs) {
-    const msg = log.message || log;
-    if (!msg) continue;
-    const brace = msg.indexOf('{');
-    if (brace >= 0) {
-      const snippet = msg.slice(brace);
-      try {
-        const parsed = JSON.parse(snippet);
-        if (parsed.artifacts) {
-          candidates.push(parsed.artifacts);
-        }
-      } catch (err) {
-        // ignore parse errors
-      }
-    }
-  }
-  if (candidates.length === 0) {
-    throw new Error('No artifact map found in generate output.');
-  }
-  return candidates[candidates.length - 1];
-}
-
-const artifacts = extractArtifactPayload(raw);
-const outDir = path.resolve('.tmp', 'generated');
+const outDir = '.tmp/generated';
 fs.rmSync(outDir, { recursive: true, force: true });
-
-Object.entries(artifacts).forEach(([relPath, content]) => {
-  const target = path.join(outDir, relPath);
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, content);
-});
-
+for (const [rel, content] of Object.entries(artifacts)) {
+  const full = `${outDir}/${rel}`;
+  fs.mkdirSync(full.substring(0, full.lastIndexOf('/')), { recursive: true });
+  fs.writeFileSync(full, content);
+}
 cp.execSync(`sf project deploy start -o ${alias} -p ${outDir}`, { stdio: 'inherit' });
+console.log('Deployed generated artifacts from DynamicActionPipeline.');

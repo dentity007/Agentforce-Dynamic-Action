@@ -1,35 +1,32 @@
 public with sharing class RecommendFunctionalities {
-    public class Response {
-        public List<HeuristicRanker.Recommendation> recommendations;
+    // Harmonized response shape with pipeline: ranked list with rationale + tags
+    public class Response { public List<PlanModels.Recommendation> recommendations; }
+
+    // Entry point: narrative + includeObjects (schema gathered internally)
+    public static Response run(String businessNarrative, List<String> includeObjects, Integer topK) {
+        // Gather a lightweight schema slice, then delegate to blended recommender
+        Set<String> objectFilter = (includeObjects == null || includeObjects.isEmpty())
+            ? null
+            : new Set<String>(includeObjects);
+        SchemaSnapshot snap = SchemaSnapshot.buildSnapshot(objectFilter);
+        // Convert to Map<String,Object> shape expected by recommender
+        Map<String, Object> schemaSlice = (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(snap));
+
+        return runWithSchema(businessNarrative, schemaSlice, topK);
     }
 
-    @AuraEnabled(cacheable=true)
-    public static Response run(String businessNarrative, List<String> includeObjects, Integer topK) {
-        // 1) Schema
-        SchemaSnapshot snap = SchemaSnapshot.buildSnapshot(includeObjects == null ? new Set<String>() : new Set<String>(includeObjects));
+    // Overload: accept external schema snapshot from a Data‑Aware agent
+    public static Response runWithSchema(String businessNarrative, Map<String, Object> schemaSlice, Integer topK) {
+        BlueprintRecommendationService.RecommendationResponse rr =
+            BlueprintRecommendationService.recommend(businessNarrative, schemaSlice, null);
 
-        // 2) Candidates from curated library (and optionally heuristics)
-        List<PlanModels.ActionBlueprint> candidates = BlueprintLibrary.candidates();
-        if (candidates.isEmpty()) {
-            // Fallback to your heuristic generator if you have one; else return empty.
-            candidates = new List<PlanModels.ActionBlueprint>();
-        }
-
-        // 3) Rank (heuristics + optional LLM blend)
-        List<HeuristicRanker.Recommendation> h = HeuristicRanker.rank(businessNarrative, snap, candidates, topK);
-        List<HeuristicRanker.Recommendation> blended = h;
-        List<HeuristicRanker.Recommendation> l = LLMRanker.tryRank(businessNarrative, snap, candidates, topK);
-        if (!l.isEmpty()) {
-            // Simple blend: prefer LLM order but ensure heuristic top-1 present
-            Set<String> seen = new Set<String>();
-            List<HeuristicRanker.Recommendation> merged = new List<HeuristicRanker.Recommendation>();
-            for (HeuristicRanker.Recommendation r : l) { merged.add(r); seen.add(r.blueprint.name); }
-            for (HeuristicRanker.Recommendation r : h) if (!seen.contains(r.blueprint.name)) merged.add(r);
-            blended = merged.subList(0, Math.min(topK == null ? 3 : topK, merged.size()));
+        // Optional topK trim
+        if (topK != null && topK > 0 && rr.recommendations.size() > topK) {
+            rr.recommendations = rr.recommendations.subList(0, topK);
         }
 
         Response resp = new Response();
-        resp.recommendations = blended;
+        resp.recommendations = rr.recommendations;
         return resp;
     }
 }
