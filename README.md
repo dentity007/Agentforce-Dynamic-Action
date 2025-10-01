@@ -31,6 +31,31 @@ Key Apex entry points:
 
 ---
 
+## Setup
+
+### Dev Hub Authentication for CI
+
+To enable GitHub Actions to create scratch orgs automatically:
+
+1. **Login to Dev Hub locally** (if not already):
+   ```bash
+   sf org login web --set-default-dev-hub --alias DevHub
+   ```
+
+2. **Export auth URL**:
+   ```bash
+   sf org display --target-org DevHub --verbose --json | jq -r '.result.sfdxAuthUrl' > sfdx_auth_url.txt
+   ```
+
+3. **Add to GitHub Secrets**:
+   - Go to your repo → Settings → Secrets and variables → Actions → New repository secret
+   - Name: `SFDX_AUTH_URL`
+   - Value: Paste the contents of `sfdx_auth_url.txt`
+
+This allows CI workflows to authenticate and create scratch orgs for testing.
+
+---
+
 ## Quick Start
 
 ### One-command setup
@@ -245,8 +270,35 @@ See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` f
 
 ## Evaluation & Regression Tracking
 
+The repository includes a comprehensive evaluation harness for validating blueprint synthesis and artifact generation.
+
+### Deterministic Golden Tests (CI)
+
+Run deterministic tests using curated blueprints (no LLM required):
+
+```bash
+./scripts/e2e-eval.sh
+```
+
+This creates a scratch org, deploys code, and validates artifact generation against golden test definitions in `goldens/tests.json`. Tests include fuzzy checks for required content and strict diffs against expected files if present.
+
+- **Expand Coverage**: Add more test cases to `goldens/tests.json` for new blueprints
+- **Strict Snapshots**: For stable templates, add expected files under `goldens/<test_name>/expected/` to enable exact diffs
+- **CI Integration**: The `eval` workflow runs on every PR/push, failing builds on regressions
+
+### LLM-Powered Evaluation (Optional)
+
+For exercising LLM ranking and synthesis:
+
+1. **Configure API Key**: Add `OPENAI_API_KEY` as a GitHub secret
+2. **Register Client**: The `eval-llm` workflow registers an OpenAI client in the scratch org
+3. **Run Fuzzy Tests**: Uses the same harness but with live LLM calls (keeps tests fuzzy due to output variability)
+
+Review `docs/evaluation.md` for detailed setup and `goldens/tests.json` for test definitions.
+
+### Legacy Benchmark
+
 - Run `GenerationBenchmark.summarize()` to compare current generation output with golden blueprints.
-- Review `docs/evaluation.md` and `tests/generation/README.md` for adding scenarios and wiring the benchmark into CI.
 - Golden reference assets live under `tests/generation/golden/` so the expected behavior stays visible in code review.
 
 ## Troubleshooting

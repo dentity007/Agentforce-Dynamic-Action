@@ -1,39 +1,104 @@
-# Evaluation Workflow
+# Evaluation Harness
 
-Use the evaluation harness to benchmark dynamic action generation over time.
+The evaluation harness validates the "recommend → synthesize → artifacts" pipeline using golden tests. It supports both deterministic (blueprint-by-name) and LLM-powered modes, with fuzzy and strict validation.
 
 ## Components
 
-- **GenerationBenchmark.cls** – Apex utility that compares generated outputs against golden expectations.
-- **GenerationBenchmark_Test.cls** – Unit tests that ensure the harness executes.
-- **tests/generation/golden/** – Human-readable copies of golden blueprints and expected code fragments.
+- **`EvalHarness.cls`** – Apex entry point for generating artifacts from named blueprints
+- **`goldens/tests.json`** – Test definitions with blueprint names, goals, and validation checks
+- **`scripts/eval.js`** – Node.js runner that executes tests in scratch orgs and validates outputs
+- **`scripts/e2e-eval.sh`** – End-to-end script for local testing
+- **`.github/workflows/eval.yml`** – CI workflow for deterministic tests
+- **`.github/workflows/eval-llm.yml`** – Optional CI workflow for LLM-powered tests
 
-## Running Manually
+## Deterministic Mode (CI Default)
 
-1. Deploy the project to an org.
-2. Execute:
-   ```apex
-   System.debug(GenerationBenchmark.summarize());
-   ```
-3. Inspect the debug log for per-scenario pass/fail indicators and notes on mismatches.
+Tests use curated blueprints by name, ensuring deterministic results without LLM calls.
+
+### Running Locally
+
+```bash
+./scripts/e2e-eval.sh
+```
+
+This creates a scratch org, deploys code, registers blueprints, and runs all golden tests.
+
+### Test Definitions
+
+Edit `goldens/tests.json` to add more test cases:
+
+```json
+{
+  "name": "blueprint_name",
+  "goal": "Natural language goal description",
+  "checks": {
+    "force-app/main/default/classes": {
+      "mustExist": ["DynamicAction_", "Test.cls"],
+      "mustContain": {
+        "*.cls": ["required", "substrings"],
+        "*Test.cls": ["@IsTest", "assertions"]
+      }
+    }
+  }
+}
+```
+
+- **`mustExist`**: Array of substrings that must appear in filenames
+- **`mustContain`**: Object mapping globs to required substrings per file
+
+### Strict Snapshots
+
+For exact diffs (useful when templates stabilize):
+
+1. Run a test to generate artifacts: `./scripts/e2e-eval.sh`
+2. Copy generated files to `goldens/<test_name>/expected/`
+3. Re-run: The harness auto-detects expected files and switches to strict mode
+
+Example:
+```
+goldens/opportunity_closed_won/expected/force-app/main/default/classes/DynamicAction_UpdateOpportunityStage.cls
+```
+
+## LLM Mode (Optional)
+
+Exercises live LLM ranking/synthesis for smoke testing.
+
+### Setup
+
+1. **Add GitHub Secret**: `OPENAI_API_KEY` with your OpenAI API key
+2. **Named Credential**: Configure `LLM_Provider` in the org with "Authorization: Bearer YOUR_KEY" header
+3. **Run Workflow**: Trigger `eval-llm` manually or on schedule
+
+### Differences from Deterministic
+
+- Registers live LLM client via `scripts/register-llm.apex`
+- Uses fuzzy checks only (LLM outputs vary)
+- Scheduled weekly by default
 
 ## CI Integration
 
-- Call `GenerationBenchmark.run()` inside a scheduled Apex job or test context to collect structured results.
-- Fail the build if any `CaseResult` reports `false` for blueprint, class, or test assertions.
-- Optionally extend `CaseResult` with additional metadata (e.g., response latency) for richer dashboards.
+### Deterministic (Always On)
 
-## Adding Scenarios
+- **Trigger**: Every PR and push to main/master
+- **Workflow**: `.github/workflows/eval.yml`
+- **Secret**: `SFDX_AUTH_URL` for Dev Hub auth
+- **Behavior**: Fails builds on any test failure
 
-Review `tests/generation/cases.json` for the current catalog.
+### LLM (Optional)
 
-1. Add a new case to `GenerationBenchmark.goldenCases()` with a golden blueprint JSON string.
-2. Drop supporting reference files into `tests/generation/golden/` for documentation.
-3. Update `tests/generation/README.md` to describe the new scenario.
-4. Run `sfdx force:apex:test:run` to ensure the benchmark tests pass.
+- **Trigger**: Manual or weekly schedule
+- **Workflow**: `.github/workflows/eval-llm.yml`
+- **Secrets**: `SFDX_AUTH_URL` and `OPENAI_API_KEY`
+- **Behavior**: Fuzzy validation, doesn't block merges
 
-Consistently running the harness helps surface regressions between heuristic and LLM outputs and documents expected behavior for critical business goals.
+## Troubleshooting
 
-### CLI Helper
+- **Blueprint Not Found**: Ensure the blueprint name in `tests.json` matches entries in `BlueprintLibrary`
+- **FLS Errors**: Assign `DynamicAction_Permissions` permset
+- **LLM Callouts Blocked**: Verify Named Credential configuration
+- **Strict Diffs Failing**: Update expected files after intentional template changes
+- **Scripts Not Executable**: Run `chmod +x scripts/*.sh`
 
-Run `tests/generation/run.sh` to execute the benchmark via `sfdx force:apex:execute` and print the summary to stdout.
+## Legacy Benchmark
+
+The original `GenerationBenchmark.cls` remains for comparing against golden blueprints. Run `GenerationBenchmark.summarize()` for detailed comparisons.

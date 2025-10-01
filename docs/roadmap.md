@@ -12,7 +12,7 @@ Planned enhancements for Agentforce Dynamic Action.
 ## Mid Term
 
 - **Flow & Invocable Generation** – Extend template engine to produce Flow XML and invocable metadata alongside Apex.
-- **LLM Evaluation Harness** – Capture prompt/response telemetry, run automated validation, and score responses for consistency.
+- **✅ LLM Evaluation Harness** – Capture prompt/response telemetry, run automated validation, and score responses for consistency. *(Completed: Deterministic golden test harness with CI integration, optional LLM mode)*
 - **UI Integration** – Build Lightning components that surface plans, generated code diffs, and execution logs.
 
 ## Long Term
