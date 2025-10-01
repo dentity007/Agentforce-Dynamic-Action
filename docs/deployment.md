@@ -4,7 +4,7 @@ Generated artifacts come back as in-memory maps. This guide outlines options for
 
 ## 1. Persist to Source Tracking (Recommended)
 
-1. Call `DynamicActionPipeline.execute(goal, schemaSlice, constraints)`.
+1. Call `DynamicActionPipeline.execute(goal, schemaSlice, constraints)` or, when you already have a chosen blueprint, `DynamicActionPipeline.executeFromBlueprint(blueprint, schemaSlice, constraints)`.
 2. Iterate over `result.artifacts.apex` and write each entry to `force-app/main/default/classes/` as `*.cls` / `*.cls-meta.xml` pairs.
 3. Do the same for `result.artifacts.tests` (usually auto-generated).
 4. Commit the files to source control and deploy using your normal CI/CD pipeline (`sfdx force:source:deploy`).
@@ -15,6 +15,12 @@ for (Map<String, String> artifact : result.artifacts.apex) {
     System.debug('Class ' + artifact.get('name'));
     System.debug(artifact.get('content'));
 }
+```
+
+Generating directly from a recommended blueprint:
+```apex
+PlanModels.ActionBlueprint bp = r.recommendations.isEmpty() ? null : r.recommendations[0].blueprint;
+DynamicActionPipeline.Result result = DynamicActionPipeline.executeFromBlueprint(bp, null, null);
 ```
 
 ## 2. Metadata API Deployment
