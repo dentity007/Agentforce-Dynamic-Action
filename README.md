@@ -54,7 +54,7 @@ Requires Node.js 18+, the Salesforce `sf` CLI, and a configured Dev Hub (`SFDX_A
    sf org assign permset -n DynamicAction_Permissions -o dynamicAction
    ```
 3. **(Optional) Register an LLM client**
-   Edit `scripts/register-llm.apex` and run `sf apex run -o dynamicAction -f scripts/register-llm.apex`. Until then the stub heuristics will map common goals to example blueprints.
+   The repository includes an OpenAI client (`OpenAIClient.cls`) ready to use. First, configure the `LLM_Provider` Named Credential in Setup with your OpenAI API key as an "Authorization: Bearer YOUR_KEY" header. Then run `sf apex run -o dynamicAction -f scripts/register-llm.apex` to register the client. Until then the stub heuristics will map common goals to example blueprints.
 4. **Generate code artifacts**
    ```bash
    mkdir -p .tmp
@@ -238,7 +238,7 @@ See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` f
 ### Common First-Run Issues
 - **FLS/Sharing Errors**: Generated actions include guardrails but may fail if your user lacks FLS on target fields. Assign `DynamicAction_Permissions` or ensure your profile has read/write access to Opportunity/Case fields.
 - **Missing Objects**: If Opportunity or Case objects aren't available, use `config/project-scratch-def.json` which enables Sales Cloud features, or modify `includeObjects` in recommendation calls to use available objects.
-- **LLM Callouts Blocked**: Configure the `LLM_Provider` Named Credential with valid endpoint/credentials, then run `scripts/register-llm.apex` to register your client.
+- **LLM Callouts Blocked**: Configure the `LLM_Provider` Named Credential with your OpenAI API key (add "Authorization: Bearer YOUR_KEY" header), then run `scripts/register-llm.apex` to register the OpenAI client.
 - **Deployment writes no files**: Ensure `scripts/generate.apex` completed successfully and that Node.js is installed for `scripts/deploy-artifacts.js`.
 - **Permission errors**: Run `sf org assign permset -n DynamicAction_Permissions -o <alias>` after deploying metadata.
 - **Scripts not executable**: Run `chmod +x scripts/*.sh` on Unix systems if scripts fail with "permission denied".

@@ -2,6 +2,52 @@
 
 Agentforce Dynamic Action ships with a stubbed LLM client (`LLMClientGateway.StubLLMClient`) so you can run locally without network calls. To connect a real provider, implement the `LLMClientGateway.LLMClient` interface.
 
+## Quick Start with OpenAI
+
+The repository includes a production-ready OpenAI client:
+
+1. **Deploy the Named Credential**:
+   - `force-app/main/default/namedCredentials/LLM_Provider.namedCredential-meta.xml` is configured for OpenAI
+   - In Salesforce Setup → Named Credentials → LLM_Provider, add:
+     - **Header Name**: `Authorization`
+     - **Header Value**: `Bearer YOUR_OPENAI_API_KEY`
+
+2. **Register the client**:
+   ```bash
+   sf apex run -o dynamicAction -f scripts/register-llm.apex
+   ```
+   This registers `OpenAIClient('gpt-4o-mini')` which uses the Chat Completions API.
+
+3. **Test the integration**:
+   ```bash
+   sf apex run -o dynamicAction -f scripts/recommend.apex
+   ```
+   Should now return LLM-ranked recommendations instead of heuristic-only results.
+
+## OpenAI Client Implementation
+
+The included `OpenAIClient.cls` implements the interface using OpenAI's Chat Completions API:
+
+```apex
+public with sharing class OpenAIClient implements LLMClientGateway.LLMClient {
+    private String model;
+    
+    public OpenAIClient(String modelName) { 
+        this.model = modelName; 
+    }
+
+    public String complete(LLMClientGateway.LLMRequest request) {
+        // Uses callout:LLM_Provider Named Credential
+        // Formats request as Chat Completions API
+        // Returns parsed response content
+    }
+}
+```
+
+**Supported Models**: `gpt-4o-mini` (default, cost-effective), `gpt-4.1` (higher quality), or any OpenAI model.
+
+**Azure OpenAI**: Update the Named Credential endpoint to your Azure resource and adjust the API path accordingly.
+
 ## Interface
 
 ```apex
