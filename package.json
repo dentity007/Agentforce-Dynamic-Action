@@ -13,5 +13,7 @@
     "deploy:artifacts": "node scripts/deploy-artifacts.js .tmp/generate.json ${npm_config_org:-dynamicAction}",
     "tests": "bash -lc 'sf apex run test -o ${npm_config_org:-dynamicAction} -l RunLocalTests -r human'",
     "e2e": "bash -lc './scripts/e2e.sh ${npm_config_org:-dynamicAction}'"
+    ,
+    "local:loop": "bash -lc 'npm run generate && npm run deploy:artifacts && npm run tests'"
   }
 }
