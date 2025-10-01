@@ -1,0 +1,15 @@
+{
+  "name": "agentforce-dynamic-action",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Helper scripts for Agentforce Dynamic Action",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "recommend": "node scripts/recommend-cli.js",
+    "blueprints:build": "node scripts/build-blueprint-library.js",
+    "e2e": "./scripts/e2e.sh"
+  }
+}
+
