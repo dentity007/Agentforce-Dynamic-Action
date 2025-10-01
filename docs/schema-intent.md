@@ -2,7 +2,7 @@
 
 `SchemaIntentPipeline` exposes a turnkey entry point that bundles the three core steps:
 
-1. **Schema Snapshot** – Uses `SchemaSnapshotService` to gather object/field metadata (limited by options).
+1. **Schema Snapshot** – Uses `SchemaSnapshot` (fallback to `SchemaSnapshotService` options) to gather object/field metadata (limited by options).
 2. **Recommendation Ranking** – Calls `BlueprintRecommendationService` to blend curated entries (`BlueprintLibraryService`) with LLM/heuristic output and score the combined list.
 3. **Implementation Generation** – Reuses `DynamicActionPlanner` and `CodeGenService` to produce a runnable plan and code artifacts.
 
@@ -33,6 +33,7 @@ PlanModels.PipelineResult pipeline = SchemaIntentPipeline.run(
 - `schemaOptions.maxObjects` – Limit the number of objects included in the snapshot.
 - `schemaOptions.maxFieldsPerObject` – Limit field detail per object to keep prompts concise.
 - `schemaOptions.includeRelationships` – When `true`, child relationships are surfaced for deeper graph prompts.
+- `includeObjects` – Explicit list of sObjects to snapshot when a schema is not provided.
 - `blueprintName` – Provide a curated blueprint key (see `BlueprintLibrary.listEntries`) to bypass LLM recommendations.
 - `constraints` – Pass model hints or guardrail directives directly to `BlueprintSynthesisService`.
 

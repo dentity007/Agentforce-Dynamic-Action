@@ -6,6 +6,9 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP_DIR="$PROJECT_ROOT/.tmp"
 mkdir -p "$TMP_DIR"
 
+# 0) Refresh curated blueprint library
+node "$PROJECT_ROOT/scripts/build-blueprint-library.js"
+
 # 1) Create scratch org & push source
 echo "Creating scratch org $ORG_ALIAS" >&2
 sf org create scratch -f "$PROJECT_ROOT/config/project-scratch-def.json" -a "$ORG_ALIAS" -s

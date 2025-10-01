@@ -89,3 +89,30 @@ LLM responses can either be an array of blueprint objects or an object with an `
 ```
 
 When no JSON is returned (or parsing fails), the system uses the heuristic factory as a fallback.
+
+## Schema Snapshot Shape
+
+`SchemaSnapshot.buildSnapshot` returns the following structure (or equivalent JSON if provided externally):
+
+```jsonc
+{
+  "objects": {
+    "Opportunity": {
+      "apiName": "Opportunity",
+      "fields": {
+        "StageName": {
+          "apiName": "StageName",
+          "type": "Picklist",
+          "nillable": false,
+          "createable": true,
+          "updateable": true,
+          "picklistValues": ["Prospecting", "Closed Won"]
+        }
+      },
+      "childRelationships": ["Task.WhatId", "Event.WhatId"]
+    }
+  }
+}
+```
+
+Pipeline helpers will also accept a JSON snapshot in this shape when a caller provides external metadata instead of calling `SchemaSnapshot.buildSnapshot`.

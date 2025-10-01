@@ -3,28 +3,32 @@ public with sharing class SchemaIntentPipeline {
         @AuraEnabled public SchemaSnapshotService.Options schemaOptions;
         @AuraEnabled public Map<String, Object> constraints;
         @AuraEnabled public String blueprintName;
+        @AuraEnabled public List<String> includeObjects;
 
         public Options() {
             schemaOptions = new SchemaSnapshotService.Options();
             constraints = new Map<String, Object>();
+            includeObjects = new List<String>();
         }
     }
 
     public static PlanModels.PipelineResult run(String goal) {
-        return run(goal, new Options());
+        return run(goal, null, new Options());
     }
 
     public static PlanModels.PipelineResult run(String goal, Options options) {
+        return run(goal, null, options);
+    }
+
+    public static PlanModels.PipelineResult run(String goal, Map<String, Object> schemaSlice, Options options) {
         Options resolved = (options == null) ? new Options() : options;
         PlanModels.PipelineResult result = new PlanModels.PipelineResult();
 
-        Map<String, Object> schemaSlice = SchemaSnapshotService.summarize(resolved.schemaOptions);
-        result.schema = schemaSlice;
+        Map<String, Object> resolvedSchema = resolveSchema(schemaSlice, resolved.includeObjects);
+        result.schema = resolvedSchema;
 
-        BlueprintLibraryData.LibraryEntry curatedEntry = !String.isBlank(resolved.blueprintName)
-            ? BlueprintLibraryService.getEntry(resolved.blueprintName)
-            : null;
-        PlanModels.ActionBlueprint curatedBlueprint = (curatedEntry != null) ? curatedEntry.blueprint : null;
+        BlueprintLibrary.Entry curatedEntry = BlueprintLibraryService.getEntry(resolved.blueprintName);
+        PlanModels.ActionBlueprint curatedBlueprint = (curatedEntry == null) ? null : curatedEntry.blueprint;
 
         String effectiveGoal = goal;
         if (String.isBlank(effectiveGoal) && curatedEntry != null) {
@@ -37,29 +41,47 @@ public with sharing class SchemaIntentPipeline {
         if (curatedBlueprint != null) {
             actionBlueprints.add(curatedBlueprint);
 
-            PlanModels.Recommendation rec = new PlanModels.Recommendation();
-            rec.name = String.isBlank(curatedBlueprint.label) ? curatedBlueprint.name : curatedBlueprint.label;
-            rec.blueprint = curatedBlueprint;
-            rec.source = 'CURATED';
-            if (curatedEntry != null && curatedEntry.tags != null) {
-                rec.tags.addAll(curatedEntry.tags);
+            PlanModels.Recommendation recommendation = new PlanModels.Recommendation();
+            recommendation.name = String.isBlank(curatedBlueprint.label) ? curatedBlueprint.name : curatedBlueprint.label;
+            recommendation.blueprint = curatedBlueprint;
+            recommendation.source = 'CURATED';
+            if (curatedEntry.tags != null) {
+                recommendation.tags.addAll(curatedEntry.tags);
             }
-            rec.score = Decimal.valueOf('1');
-            rec.rationale = String.isBlank(curatedEntry != null ? curatedEntry.description : null)
-                ? 'Curated library blueprint'
-                : curatedEntry.description;
-            result.recommendations.add(rec);
+            recommendation.score = Decimal.valueOf('1');
+            String description = curatedEntry.description;
+            recommendation.rationale = String.isBlank(description) ? 'Curated library blueprint' : description;
+            result.recommendations.add(recommendation);
         } else {
             BlueprintRecommendationService.RecommendationResponse recommendationResponse =
-                BlueprintRecommendationService.recommend(effectiveGoal, schemaSlice, resolved.constraints);
+                BlueprintRecommendationService.recommend(effectiveGoal, resolvedSchema, resolved.constraints);
             actionBlueprints.addAll(recommendationResponse.blueprints);
             result.recommendations.addAll(recommendationResponse.recommendations);
         }
 
-        PlanModels.Plan plan = DynamicActionPlanner.buildPlan(effectiveGoal, schemaSlice, resolved.constraints, actionBlueprints);
+        PlanModels.Plan plan = DynamicActionPlanner.buildPlan(effectiveGoal, resolvedSchema, resolved.constraints, actionBlueprints);
         result.plan = plan;
-
         result.artifacts = CodeGenService.generate(plan.actions);
         return result;
+    }
+
+    private static Map<String, Object> resolveSchema(Map<String, Object> providedSlice, List<String> includeObjects) {
+        if (providedSlice != null && !providedSlice.isEmpty()) {
+            return providedSlice;
+        }
+        Set<String> objectSet = null;
+        if (includeObjects != null && !includeObjects.isEmpty()) {
+            objectSet = new Set<String>();
+            for (String name : includeObjects) {
+                if (!String.isBlank(name)) {
+                    objectSet.add(name);
+                }
+            }
+            if (objectSet.isEmpty()) {
+                objectSet = null;
+            }
+        }
+        SchemaSnapshot snapshot = SchemaSnapshot.buildSnapshot(objectSet);
+        return (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(snapshot));
     }
 }

@@ -7,7 +7,7 @@ Agentforce Dynamic Action turns org metadata plus a natural language business go
 
 | Layer | Apex Components | Responsibility |
 |-------|-----------------|----------------|
-| **Schema Snapshot** | `SchemaSnapshotService` | Produce a trimmed org metadata slice for the blueprinting prompt. |
+| **Schema Snapshot** | `SchemaSnapshot`, `SchemaSnapshotService` | Produce a trimmed org metadata slice for the blueprinting prompt. |
 | **Intent & Prompting** | `BlueprintSynthesisService`, `PromptLibrary`, `LLMClientGateway` | Build prompts, call (or stub) an LLM, parse JSON into `ActionBlueprint` objects. |
 | **Blueprint Heuristics** | `HeuristicBlueprintFactory` | Provide offline/default blueprints when no LLM is available. |
 | **Blueprint Ranking** | `BlueprintRecommendationService`, `BlueprintLibraryService` | Blend curated exemplars with LLM output and score the recommended actions. |

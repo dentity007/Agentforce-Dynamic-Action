@@ -3,8 +3,7 @@ private class SchemaIntentPipeline_Test {
     @IsTest
     static void pipelineProducesRecommendationsAndArtifacts() {
         SchemaIntentPipeline.Options options = new SchemaIntentPipeline.Options();
-        options.schemaOptions.maxObjects = 3;
-        options.schemaOptions.maxFieldsPerObject = 5;
+        options.includeObjects = new List<String>{'Opportunity'};
 
         PlanModels.PipelineResult result = SchemaIntentPipeline.run('Update opportunity stage to Closed Won', options);
 
@@ -34,5 +33,16 @@ private class SchemaIntentPipeline_Test {
         System.assertEquals(1, result.plan.actions.size(), 'Plan should include curated blueprint only.');
         System.assertEquals('CURATED', result.recommendations[0].source, 'Recommendation should mark curated source.');
         System.assertEquals('Update Opportunity Stage', result.plan.actions[0].name);
+    }
+
+    @IsTest
+    static void includeObjectsFiltersSnapshot() {
+        SchemaIntentPipeline.Options options = new SchemaIntentPipeline.Options();
+        options.includeObjects = new List<String>{'Lead'};
+        PlanModels.PipelineResult result = SchemaIntentPipeline.run('Qualify a lead', options);
+        Map<String, Object> schema = result.schema;
+        System.assert(schema.containsKey('objects'), 'Schema should include objects map.');
+        Map<String, Object> objects = (Map<String, Object>) schema.get('objects');
+        System.assert(objects.keySet().contains('Lead'), 'Lead should be included in snapshot.');
     }
 }

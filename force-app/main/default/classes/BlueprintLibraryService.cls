@@ -1,36 +1,36 @@
 public with sharing class BlueprintLibraryService {
     public class MatchResult {
-        public BlueprintLibraryData.LibraryEntry entry;
+        public BlueprintLibrary.Entry entry;
         public Decimal score;
     }
 
-    private static List<BlueprintLibraryData.LibraryEntry> cachedEntries;
+    private static List<BlueprintLibrary.Entry> cachedEntries;
 
-    public static List<BlueprintLibraryData.LibraryEntry> allEntries() {
+    public static List<BlueprintLibrary.Entry> allEntries() {
         if (cachedEntries == null) {
-            cachedEntries = BlueprintLibraryData.load();
+            cachedEntries = BlueprintLibrary.loadAll();
         }
-        return cachedEntries.deepClone(true);
+        return cloneEntries(cachedEntries);
     }
 
-    public static BlueprintLibraryData.LibraryEntry getEntry(String name) {
+    public static BlueprintLibrary.Entry getEntry(String name) {
         if (String.isBlank(name)) {
             return null;
         }
-        for (BlueprintLibraryData.LibraryEntry entry : allEntries()) {
-            if (entry != null && String.valueOf(entry.name).equalsIgnoreCase(name)) {
-                return entry;
+        for (BlueprintLibrary.Entry entry : cached()) {
+            if (entry != null && name.equalsIgnoreCase(entry.name)) {
+                return cloneEntry(entry);
             }
         }
         return null;
     }
 
     public static PlanModels.ActionBlueprint getBlueprint(String name) {
-        BlueprintLibraryData.LibraryEntry entry = getEntry(name);
-        if (entry == null || entry.blueprint == null) {
+        BlueprintLibrary.Entry entry = getEntry(name);
+        if (entry == null) {
             return null;
         }
-        return (PlanModels.ActionBlueprint) JSON.deserialize(JSON.serialize(entry.blueprint), PlanModels.ActionBlueprint.class);
+        return (entry.blueprint == null) ? null : (PlanModels.ActionBlueprint) JSON.deserialize(JSON.serialize(entry.blueprint), PlanModels.ActionBlueprint.class);
     }
 
     public static List<MatchResult> findMatches(String goal, Map<String, Object> schemaSlice, Integer limit) {
@@ -38,11 +38,11 @@ public with sharing class BlueprintLibraryService {
         String normalizedGoal = (goal == null) ? '' : goal.toLowerCase();
         Set<String> schemaTokens = extractSchemaTokens(schemaSlice);
 
-        for (BlueprintLibraryData.LibraryEntry entry : allEntries()) {
+        for (BlueprintLibrary.Entry entry : cached()) {
             Decimal score = scoreEntry(entry, normalizedGoal, schemaTokens);
             if (score > 0) {
                 MatchResult result = new MatchResult();
-                result.entry = entry;
+                result.entry = cloneEntry(entry);
                 result.score = score.setScale(2);
                 matches.add(result);
             }
@@ -54,7 +54,35 @@ public with sharing class BlueprintLibraryService {
         return matches;
     }
 
-    private static Decimal scoreEntry(BlueprintLibraryData.LibraryEntry entry, String goal, Set<String> schemaTokens) {
+    private static List<BlueprintLibrary.Entry> cached() {
+        if (cachedEntries == null) {
+            cachedEntries = BlueprintLibrary.loadAll();
+        }
+        return cachedEntries;
+    }
+
+    private static List<BlueprintLibrary.Entry> cloneEntries(List<BlueprintLibrary.Entry> entries) {
+        List<BlueprintLibrary.Entry> clones = new List<BlueprintLibrary.Entry>();
+        for (BlueprintLibrary.Entry entry : entries) {
+            clones.add(cloneEntry(entry));
+        }
+        return clones;
+    }
+
+    private static BlueprintLibrary.Entry cloneEntry(BlueprintLibrary.Entry entry) {
+        if (entry == null) {
+            return null;
+        }
+        BlueprintLibrary.Entry clone = new BlueprintLibrary.Entry();
+        clone.name = entry.name;
+        clone.tags = (entry.tags == null) ? new List<String>() : new List<String>(entry.tags);
+        clone.blueprint = (entry.blueprint == null)
+            ? null
+            : (PlanModels.ActionBlueprint) JSON.deserialize(JSON.serialize(entry.blueprint), PlanModels.ActionBlueprint.class);
+        return clone;
+    }
+
+    private static Decimal scoreEntry(BlueprintLibrary.Entry entry, String goal, Set<String> schemaTokens) {
         Decimal score = Decimal.valueOf('0');
         if (entry.tags != null) {
             for (String tag : entry.tags) {
@@ -68,13 +96,9 @@ public with sharing class BlueprintLibraryService {
                 }
             }
         }
-        if (!String.isBlank(entry.description) && goal.contains(entry.description.toLowerCase().split(' ')[0])) {
-            score += Decimal.valueOf('0.1');
-        }
-        if (score == Decimal.valueOf('0') && goal != null && entry.blueprint != null && !String.isBlank(entry.blueprint.targetSObject)) {
-            if (goal.contains(entry.blueprint.targetSObject.toLowerCase())) {
-                score += Decimal.valueOf('0.2');
-            }
+        PlanModels.ActionBlueprint bp = entry.blueprint;
+        if (score == Decimal.valueOf('0') && bp != null && !String.isBlank(bp.targetSObject) && goal.contains(bp.targetSObject.toLowerCase())) {
+            score += Decimal.valueOf('0.2');
         }
         return score;
     }
@@ -84,8 +108,7 @@ public with sharing class BlueprintLibraryService {
         if (schemaSlice == null || !schemaSlice.containsKey('objects')) {
             return tokens;
         }
-        List<Object> objects = (List<Object>) schemaSlice.get('objects');
-        for (Object obj : objects) {
+        for (Object obj : (List<Object>) schemaSlice.get('objects')) {
             if (!(obj instanceof Map<String, Object>)) continue;
             Map<String, Object> objectMap = (Map<String, Object>) obj;
             String apiName = (String) objectMap.get('apiName');

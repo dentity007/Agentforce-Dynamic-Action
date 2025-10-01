@@ -45,6 +45,7 @@ Requires Node.js 18+, the Salesforce `sf` CLI, and a configured Dev Hub (`SFDX_A
    ```bash
    git clone <repo>
    cd Agentforce-Dynamic-Action
+   node scripts/build-blueprint-library.js
    sf org create scratch -f config/project-scratch-def.json -a dynamicAction -s
    sf project deploy start -o dynamicAction
    ```
@@ -91,6 +92,31 @@ System.debug(pipeline.artifacts);
 
 Tie the result into `DynamicActionOrchestrator.run` once users confirm the checkpoint displayed in the plan.
 
+## Input Options
+
+| Mode | How to run | Notes |
+|------|-------------|-------|
+| Goal text only | `SchemaIntentPipeline.run(goal, options)` with heuristics | Works offline using curated heuristics and guardrails. |
+| Goal text + LLM | Register a client via `scripts/register-llm.apex`, then call `SchemaIntentPipeline.run(goal, options)` | Prompts include schema slice + goal; enable telemetry to capture prompts. |
+| Curated blueprint JSON | `DynamicActionPipeline.executeWithBlueprint('oppty_closed_won', null, null)` or `BlueprintLibrary.getByName(...)` | Bypasses LLM and uses the curated catalog in `/blueprints`. |
+
+## Result Shape Example
+
+```jsonc
+{
+  "plan": {
+    "goal": "Update opportunity stage to Closed Won",
+    "actions": [
+      { "name": "UpdateOpportunityStage", "targetSObject": "Opportunity" }
+    ]
+  },
+  "artifacts": {
+    "force-app/main/default/classes/DynamicAction_UpdateOpportunityStage.cls": "// ... Apex implementation ...",
+    "force-app/main/default/classes/DynamicAction_UpdateOpportunityStage.cls-meta.xml": "<?xml version=\\"1.0\\" ...>"
+  }
+}
+```
+
 ## Blueprint Contract
 
 Generated actions follow the `PlanModels.ActionBlueprint` schema defined in `docs/blueprint-contract.md`. Each blueprint lists:
@@ -128,6 +154,13 @@ See `docs/llm-integration.md`, `docs/code-synthesis.md`, and `docs/runtime.md` f
 - Run `GenerationBenchmark.summarize()` to compare current generation output with golden blueprints.
 - Review `docs/evaluation.md` and `tests/generation/README.md` for adding scenarios and wiring the benchmark into CI.
 - Golden reference assets live under `tests/generation/golden/` so the expected behavior stays visible in code review.
+
+## Troubleshooting
+
+- **Opportunity or Case features disabled** – Use the sample scratch definition in `config/project-scratch-def.json` or enable Sales Cloud features before running scripts.
+- **Permission or guardrail errors** – Assign `DynamicAction_Permissions` to your user (`sf org assign permset -n DynamicAction_Permissions`).
+- **Deployment writes no files** – Ensure `scripts/generate.apex` completed and that Node.js is installed for `scripts/deploy-artifacts.js`.
+- **LLM callouts blocked** – Configure the `LLM_Provider` Named Credential and register a client in `scripts/register-llm.apex`.
 
 ## Contributing
 
