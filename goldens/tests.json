@@ -63,5 +63,17 @@
         }
       }
     }
+  },
+  {
+    "name": "case_escalate",
+    "goal": "Escalate high-priority cases to critical status.",
+    "checks": {
+      "force-app/main/default/classes": {
+        "mustContain": {
+          "*.cls": ["Case","Escalated","Critical"],
+          "*Test.cls": ["@IsTest","Case"]
+        }
+      }
+    }
   }
 ]
