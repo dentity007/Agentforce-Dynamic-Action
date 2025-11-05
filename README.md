@@ -1,4 +1,4 @@
-# Agentforce Dynamic Action
+# Agentforce Dynamic Action POC
 
 Agentforce Dynamic Action turns Salesforce org metadata and a natural language goal into executable actions. It extends the prior *Data-Aware Agent* prototype by wiring a three-phase loop:
 
